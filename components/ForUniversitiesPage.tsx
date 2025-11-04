@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import TestimonialCard from './TestimonialCard';
 import { 
@@ -9,11 +8,54 @@ import {
   UNIVERSITY_SECURITY_FEATURES,
   UNIVERSITY_TESTIMONIALS
 } from '../constants';
+import { useModal } from '../contexts/ModalContext';
 
 const ForUniversitiesPage = () => {
+  const { openDemoModal } = useModal();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleDownloadCaseStudy = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const caseStudyText = `
+Aveksana University Partnership Case Study
+
+Client: A leading research university (anonymous for confidentiality)
+Date: Q4 2023
+
+Challenge:
+The university faced several challenges common in higher education: inconsistent thesis supervision quality, declining grant success rates, and siloed departmental research efforts. This led to extended student completion times and missed funding opportunities.
+
+Solution:
+The university implemented a campus-wide pilot of the Aveksana suite, including:
+1.  Thesis Support System: Standardized feedback and plagiarism checks for all postgraduate students.
+2.  Artha - AI Grant Writer: Deployed to the research grants office and faculty to optimize proposals.
+3.  R&D Portal: Used by three key departments to foster cross-disciplinary collaboration.
+
+Key Results after a 6-month pilot:
+- 40% faster thesis review cycles: AI-powered feedback reduced supervisor workload and provided students with instant, actionable insights.
+- 3x increase in successful grant applications: Artha's data-driven approach led to more targeted and compelling proposals, securing significant new funding.
+- 25% higher student completion rate: Proactive progress tracking and consistent support helped at-risk students stay on track.
+- Centralized visibility: The R&D portal broke down silos, leading to two new inter-departmental research projects.
+
+Conclusion:
+The Aveksana platform provided a unified solution that addressed the university's core challenges, leading to measurable improvements in academic output, funding, and operational efficiency.
+
+---
+To learn how Aveksana can help your institution, please book a demo with our team.
+    `.trim();
+
+    const blob = new Blob([caseStudyText], { type: 'text/plain' });
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = 'Aveksana-University-Case-Study.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(href);
+  };
   
   const HeroSection = () => (
     <section className="relative bg-brand-off-white pt-32 pb-20 text-center overflow-hidden">
@@ -22,16 +64,16 @@ const ForUniversitiesPage = () => {
        <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-brand-seafoam/20 rounded-full opacity-50 filter blur-2xl"></div>
       <div className="container mx-auto px-6 relative z-10">
         <h1 className="text-4xl md:text-6xl font-bold text-brand-dark-teal leading-tight">
-          Unify your research — from student theses to funded innovation.
+          Unify your research - from student theses to funded innovation.
         </h1>
         <p className="mt-6 text-lg md:text-xl text-brand-dark-grey max-w-3xl mx-auto">
           Aveksana helps universities standardize supervision, automate grant writing, and accelerate research output across departments.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-          <a href="/#demo" className="bg-brand-medium-teal text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105 w-full sm:w-auto">
+          <a href="https://calendar.app.google/SdHTRuahbsV17rmaA" target="_blank" rel="noopener noreferrer" className="bg-brand-medium-teal text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105 w-full sm:w-auto">
             Book a Demo
           </a>
-          <a href="#" className="bg-transparent text-brand-dark-grey font-semibold px-8 py-3 w-full sm:w-auto hover:text-brand-medium-teal transition-colors">
+          <a href="#" onClick={handleDownloadCaseStudy} className="bg-transparent text-brand-dark-grey font-semibold px-8 py-3 w-full sm:w-auto hover:text-brand-medium-teal transition-colors">
             Download Case Study &rarr;
           </a>
         </div>
@@ -43,7 +85,7 @@ const ForUniversitiesPage = () => {
     <section className="py-20 bg-brand-off-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">Core Challenges We Solve</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-brand-dark-teal">Core Challenges We Solve</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {UNIVERSITY_CHALLENGES.map(item => (
@@ -62,7 +104,7 @@ const ForUniversitiesPage = () => {
     <section className="py-20 bg-brand-light-gray-blue">
        <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">The Aveksana Suite for Universities</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-brand-dark-teal">The Aveksana Suite for Universities</h2>
           <p className="mt-4 text-lg text-brand-dark-grey max-w-2xl mx-auto">
             An integrated ecosystem of tools designed for every stage of the research lifecycle.
           </p>
@@ -80,7 +122,7 @@ const ForUniversitiesPage = () => {
      <section className="py-20 bg-brand-off-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">Real results from universities using Aveksana.</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-brand-dark-teal">Real results from universities using Aveksana.</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-8 text-center max-w-5xl mx-auto">
             {UNIVERSITY_OUTCOMES.map(outcome => (
@@ -114,40 +156,55 @@ const ForUniversitiesPage = () => {
     </section>
   );
 
-  const ImplementationSection = () => (
-    <section className="py-20 bg-brand-off-white">
-      <div className="container mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">A Simple, Phased Implementation</h2>
-        <p className="mt-4 text-lg text-brand-dark-grey">Typical pilot duration: 4–6 weeks.</p>
-        <div className="mt-12 max-w-5xl mx-auto">
-          <div className="relative">
-            <div className="absolute top-8 left-0 w-full h-0.5 bg-brand-light-grey hidden md:block"></div>
-            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8 md:gap-0">
-              {[
-                { num: '1️⃣', text: 'Request a Demo' },
-                { num: '2️⃣', text: 'Pilot with selected departments' },
-                { num: '3️⃣', text: 'Full campus rollout' },
-                { num: '4️⃣', text: 'Data insights and ROI reporting' },
-              ].map(step => (
-                 <div key={step.num} className="flex flex-col items-center text-center w-52 mx-auto md:mx-0">
-                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-brand-off-white border-2 border-brand-grey shadow-sm z-10 text-3xl">
-                      <span>{step.num}</span>
+  const ImplementationSection = () => {
+    const steps = [
+      { num: 1, text: 'Request a Demo' },
+      { num: 2, text: 'Pilot with selected departments' },
+      { num: 3, text: 'Full campus rollout' },
+      { num: 4, text: 'Data insights and ROI reporting' },
+    ];
+  
+    return (
+      <section className="py-20 bg-brand-off-white">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-brand-dark-teal font-heading">
+            A Simple, Phased Implementation
+          </h2>
+          <p className="mt-4 text-lg text-brand-dark-grey">
+            Typical pilot duration: 4–6 weeks.
+          </p>
+          <div className="mt-16 max-w-5xl mx-auto">
+            <div className="relative">
+              {/* The connecting line for desktop view */}
+              <div className="hidden md:block absolute top-8 left-0 w-full h-px bg-brand-light-grey"></div>
+
+              {/* Steps */}
+              <div className="flex flex-col md:flex-row justify-between items-start gap-y-12 md:gap-y-0">
+                {steps.map((step) => (
+                  <div key={step.num} className="w-full md:w-1/4 flex flex-col items-center relative px-2">
+                    {/* Circle and Number */}
+                    <div className="z-10 flex items-center justify-center w-16 h-16 bg-brand-off-white rounded-full border-2 border-brand-light-grey">
+                      <div className="w-10 h-10 bg-gradient-to-br from-brand-medium-teal to-brand-seafoam rounded-md shadow-lg flex items-center justify-center text-white text-xl font-bold">
+                        {step.num}
+                      </div>
                     </div>
-                    <h4 className="mt-4 font-semibold text-md text-brand-dark-teal">{step.text}</h4>
+                    {/* Text */}
+                    <p className="mt-4 font-semibold text-brand-dark-teal leading-tight">{step.text}</p>
                   </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   const TestimonialsSection = () => (
     <section className="py-20 bg-brand-light-gray-blue">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">Trusted by Academic Leaders</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-brand-dark-teal">Trusted by Academic Leaders</h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {UNIVERSITY_TESTIMONIALS.map((testimonial) => (
@@ -161,15 +218,15 @@ const ForUniversitiesPage = () => {
   const FinalCTASection = () => (
     <section className="py-20 bg-brand-off-white">
       <div className="container mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal max-w-3xl mx-auto">Transform your university’s research ecosystem.</h2>
+        <h2 className="text-4xl md:text-5xl font-bold text-brand-dark-teal max-w-3xl mx-auto">Transform your university’s research ecosystem.</h2>
         <p className="mt-4 text-lg text-brand-dark-grey">Book a 1:1 demo and see how Aveksana can accelerate research, funding, and innovation campus-wide.</p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-          <a href="/#demo" className="bg-brand-medium-teal text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105">
+          <a href="https://calendar.app.google/SdHTRuahbsV17rmaA" target="_blank" rel="noopener noreferrer" className="bg-brand-medium-teal text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105">
             Book a Demo
           </a>
-          <a href="#" className="text-brand-dark-grey hover:text-brand-medium-teal font-semibold px-4 py-2">
+          <button onClick={openDemoModal} className="text-brand-dark-grey hover:text-brand-medium-teal font-semibold px-4 py-2">
             Request Pilot Access
-          </a>
+          </button>
         </div>
          <p className="mt-4 text-sm text-brand-grey">Includes consultation and onboarding support.</p>
       </div>

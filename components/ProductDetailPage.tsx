@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { PRODUCTS } from '../constants';
+import { useModal } from '../contexts/ModalContext';
 
 const ProductDetailPage = () => {
   const { productId } = useParams<{ productId: string }>();
+  const { openDemoModal } = useModal();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,9 +56,9 @@ const ProductDetailPage = () => {
           </div>
           
           <div className="mt-16 text-center">
-             <a href="/#demo" className="bg-brand-medium-teal text-white font-semibold px-8 py-4 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105 inline-block">
+             <button onClick={openDemoModal} className="bg-brand-medium-teal text-white font-semibold px-8 py-4 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105 inline-block">
               Book a Demo
-            </a>
+            </button>
           </div>
 
         </div>

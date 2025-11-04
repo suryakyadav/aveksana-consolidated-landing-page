@@ -1,7 +1,20 @@
-
 import React from 'react';
+import { useModal } from '../contexts/ModalContext';
 
 const FinalCTA = () => {
+  const { openDemoModal } = useModal();
+  
+  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const href = e.currentTarget.getAttribute('href');
+    if (!href) return;
+    const targetId = href.substring(1);
+    const targetElement = document.getElementById(targetId);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section id="demo" className="bg-brand-off-white scroll-mt-24">
       <div className="container mx-auto px-6 py-20">
@@ -13,12 +26,12 @@ const FinalCTA = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row justify-center lg:justify-end gap-4">
-             <a href="#free-tool" className="bg-transparent text-white border-2 border-white font-semibold px-8 py-3 rounded-lg hover:bg-white/10 transition-all transform hover:scale-105 w-full sm:w-auto text-center">
+             <a href="#free-tool" onClick={handleScrollTo} className="bg-transparent text-white border-2 border-white font-semibold px-8 py-3 rounded-lg hover:bg-white/10 transition-all transform hover:scale-105 w-full sm:w-auto text-center">
               Start for Free
             </a>
-            <a href="#demo" className="bg-brand-seafoam text-brand-dark-teal font-bold px-8 py-3 rounded-lg shadow-md hover:opacity-90 transition-all transform hover:scale-105 w-full sm:w-auto text-center">
+            <button onClick={openDemoModal} className="bg-brand-seafoam text-brand-dark-teal font-bold px-8 py-3 rounded-lg shadow-md hover:opacity-90 transition-all transform hover:scale-105 w-full sm:w-auto text-center">
               Book a Demo
-            </a>
+            </button>
           </div>
         </div>
       </div>

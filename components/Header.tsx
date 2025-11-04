@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { NavLink } from '../types';
 import { NAV_LINKS } from '../constants';
 import { ChevronDownIcon } from './icons';
+import { useModal } from '../contexts/ModalContext';
 
 const DropdownMenu: React.FC<{ items: NavLink[]; closeDropdown: () => void }> = ({ items, closeDropdown }) => (
   <div className="absolute top-full left-0 mt-2 w-56 bg-brand-off-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
@@ -26,6 +27,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
+  const { openDemoModal } = useModal();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,6 +48,11 @@ const Header = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleDemoClick = () => {
+      setIsMobileMenuOpen(false);
+      openDemoModal();
+  }
 
   return (
     <header className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-brand-off-white/80 backdrop-blur-sm shadow-md' : 'bg-brand-off-white'}`}>
@@ -79,7 +86,7 @@ const Header = () => {
 
         <div className="hidden md:flex items-center space-x-4">
           <Link to="/" className="text-brand-dark-grey hover:text-brand-medium-teal">Log In</Link>
-          <a href="/#demo" className="bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</a>
+          <button onClick={openDemoModal} className="bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
         </div>
 
         <div className="md:hidden">
@@ -101,7 +108,7 @@ const Header = () => {
                 {link.subMenu && (
                   <div className="pl-4">
                     {link.subMenu.map(subLink => (
-                       <Link key={subLink.label} to={subLink.href.substring(2)} className="block text-brand-grey hover:text-brand-medium-teal py-1">{subLink.label}</Link>
+                       <Link key={subLink.label} to={subLink.href.substring(2)} onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-grey hover:text-brand-medium-teal py-1">{subLink.label}</Link>
                     ))}
                   </div>
                 )}
@@ -110,7 +117,7 @@ const Header = () => {
             <Link to="/" className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Log In</Link>
           </nav>
           <div className="px-6 pb-4">
-            <a href="/#demo" className="block w-full text-center bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</a>
+            <button onClick={handleDemoClick} className="block w-full text-center bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
           </div>
         </div>
       )}

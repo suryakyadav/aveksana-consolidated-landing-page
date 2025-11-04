@@ -9,8 +9,10 @@ import {
   CORPORATE_SECURITY_FEATURES,
   CORPORATE_TESTIMONIALS
 } from '../constants';
+import { useModal } from '../contexts/ModalContext';
 
 const ForCorporationsPage = () => {
+  const { openDemoModal } = useModal();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -30,9 +32,9 @@ const ForCorporationsPage = () => {
           Aveksana empowers corporate innovation teams to identify emerging opportunities, generate fundable proposals, and manage research pipelines — all in one unified AI workspace.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-          <a href="/#demo" className="bg-brand-seafoam text-brand-dark-teal font-bold px-8 py-3 rounded-lg shadow-md hover:opacity-90 transition-all transform hover:scale-105 w-full sm:w-auto">
+          <button onClick={openDemoModal} className="bg-brand-seafoam text-brand-dark-teal font-bold px-8 py-3 rounded-lg shadow-md hover:opacity-90 transition-all transform hover:scale-105 w-full sm:w-auto">
             Book a Demo
-          </a>
+          </button>
           <Link to="/products/rd-portal" className="bg-transparent text-gray-300 font-semibold px-8 py-3 w-full sm:w-auto hover:text-white transition-colors">
             Explore R&D Portal &rarr;
           </Link>
@@ -163,12 +165,12 @@ const ForCorporationsPage = () => {
         <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal max-w-3xl mx-auto">Accelerate your innovation pipeline today.</h2>
         <p className="mt-4 text-lg text-brand-dark-grey">Join leading R&D organizations using Aveksana to uncover opportunities, automate funding, and innovate faster.</p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-          <a href="/#demo" className="bg-brand-medium-teal text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105">
+          <button onClick={openDemoModal} className="bg-brand-medium-teal text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105">
             Book a Demo
-          </a>
-          <a href="#" className="text-brand-dark-grey hover:text-brand-medium-teal font-semibold px-4 py-2">
+          </button>
+          <button onClick={openDemoModal} className="text-brand-dark-grey hover:text-brand-medium-teal font-semibold px-4 py-2">
             Request Enterprise Trial
-          </a>
+          </button>
         </div>
          <p className="mt-4 text-sm text-brand-grey">Enterprise onboarding and support included.</p>
       </div>

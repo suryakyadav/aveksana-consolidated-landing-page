@@ -1,11 +1,12 @@
-
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import TopicGenerator from './TopicGenerator';
 import TestimonialCard from './TestimonialCard';
 import { WHY_AVEKSANA_INDIVIDUALS, INDIVIDUAL_SUCCESS_STORIES, INDIVIDUAL_PLANS } from '../constants';
+import { useModal } from '../contexts/ModalContext';
 
 const ForIndividualsPage = () => {
+  const { openDemoModal } = useModal();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -93,9 +94,9 @@ const ForIndividualsPage = () => {
             </div>
           </div>
         </div>
-        <a href="/#demo" className="mt-12 inline-block bg-brand-off-white text-brand-medium-teal font-semibold px-6 py-3 rounded-lg border-2 border-brand-medium-teal shadow-sm hover:bg-brand-medium-teal/10 transition-colors">
+        <button onClick={openDemoModal} className="mt-12 inline-block bg-brand-off-white text-brand-medium-teal font-semibold px-6 py-3 rounded-lg border-2 border-brand-medium-teal shadow-sm hover:bg-brand-medium-teal/10 transition-colors">
           Invite Your University &rarr;
-        </a>
+        </button>
       </div>
     </section>
   );

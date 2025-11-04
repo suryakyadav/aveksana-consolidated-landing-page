@@ -12,35 +12,50 @@ import ProductDetailPage from './components/ProductDetailPage';
 import ForIndividualsPage from './components/ForIndividualsPage';
 import ForUniversitiesPage from './components/ForUniversitiesPage';
 import ForCorporationsPage from './components/ForCorporationsPage';
+import { ModalProvider, useModal } from './contexts/ModalContext';
+import RequestDemoModal from './components/RequestDemoModal';
 
-const LandingPage = () => (
-  <>
-    <main>
-      <Hero />
-      <SocialProof />
-      <ProductSuite />
-      <Testimonials />
-      <TopicGenerator />
-      <FinalCTA />
-    </main>
-  </>
-);
+
+const LandingPage = () => {
+  return (
+    <>
+      <main>
+        <Hero />
+        <SocialProof />
+        <ProductSuite />
+        <Testimonials />
+        <TopicGenerator />
+        <FinalCTA />
+      </main>
+    </>
+  );
+};
+
+const AppContent = () => {
+  const { isDemoModalOpen, closeDemoModal } = useModal();
+  return (
+    <div className="bg-brand-off-white font-sans text-brand-dark-grey">
+      <Header />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/products/:productId" element={<ProductDetailPage />} />
+        <Route path="/solutions/for-individuals" element={<ForIndividualsPage />} />
+        <Route path="/solutions/for-universities" element={<ForUniversitiesPage />} />
+        <Route path="/solutions/for-corporations" element={<ForCorporationsPage />} />
+      </Routes>
+      <Footer />
+      <RequestDemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />
+    </div>
+  )
+}
 
 
 function App() {
   return (
     <HashRouter>
-      <div className="bg-brand-off-white font-sans text-brand-dark-grey">
-        <Header />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/products/:productId" element={<ProductDetailPage />} />
-          <Route path="/solutions/for-individuals" element={<ForIndividualsPage />} />
-          <Route path="/solutions/for-universities" element={<ForUniversitiesPage />} />
-          <Route path="/solutions/for-corporations" element={<ForCorporationsPage />} />
-        </Routes>
-        <Footer />
-      </div>
+      <ModalProvider>
+        <AppContent />
+      </ModalProvider>
     </HashRouter>
   );
 }
