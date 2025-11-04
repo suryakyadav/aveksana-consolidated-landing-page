@@ -5,13 +5,13 @@ import { NAV_LINKS } from '../constants';
 import { ChevronDownIcon } from './icons';
 
 const DropdownMenu: React.FC<{ items: NavLink[]; closeDropdown: () => void }> = ({ items, closeDropdown }) => (
-  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
+  <div className="absolute top-full left-0 mt-2 w-56 bg-brand-off-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
     <div className="py-1">
       {items.map((item) => (
         <Link
           key={item.label}
           to={item.href.startsWith('/#/') ? item.href.substring(2) : item.href}
-          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          className="block px-4 py-2 text-sm text-brand-dark-grey hover:bg-brand-light-grey"
           onClick={closeDropdown}
         >
           {item.label}
@@ -48,9 +48,9 @@ const Header = () => {
   }, []);
 
   return (
-    <header className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-sm shadow-md' : 'bg-white'}`}>
+    <header className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-brand-off-white/80 backdrop-blur-sm shadow-md' : 'bg-brand-off-white'}`}>
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold text-gray-800">Aveksana</Link>
+        <Link to="/" className="text-2xl font-bold text-brand-dark-teal font-heading">Aveksana</Link>
         
         <nav ref={navRef} className="hidden md:flex items-center space-x-8">
           {NAV_LINKS.map((link) => (
@@ -58,7 +58,7 @@ const Header = () => {
               {link.subMenu ? (
                 <button
                   onClick={() => setOpenDropdown(openDropdown === link.label ? null : link.label)}
-                  className="text-gray-600 hover:text-aveksana-blue flex items-center"
+                  className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center"
                   aria-haspopup="true"
                   aria-expanded={openDropdown === link.label}
                 >
@@ -66,7 +66,7 @@ const Header = () => {
                   <ChevronDownIcon />
                 </button>
               ) : (
-                <a href={link.href} className="text-gray-600 hover:text-aveksana-blue flex items-center">
+                <a href={link.href} className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center">
                   {link.label}
                 </a>
               )}
@@ -78,8 +78,8 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex items-center space-x-4">
-          <Link to="/" className="text-gray-600 hover:text-aveksana-blue">Log In</Link>
-          <a href="/#demo" className="bg-aveksana-blue text-white font-semibold px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Book a Demo</a>
+          <Link to="/" className="text-brand-dark-grey hover:text-brand-medium-teal">Log In</Link>
+          <a href="/#demo" className="bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</a>
         </div>
 
         <div className="md:hidden">
@@ -93,24 +93,24 @@ const Header = () => {
       
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white shadow-lg">
+        <div className="md:hidden bg-brand-off-white shadow-lg">
           <nav className="px-6 pt-2 pb-4 space-y-2">
             {NAV_LINKS.map((link) => (
               <div key={link.label}>
-                <a href={link.href} className="block text-gray-600 hover:text-aveksana-blue py-2">{link.label}</a>
+                <a href={link.href} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">{link.label}</a>
                 {link.subMenu && (
                   <div className="pl-4">
                     {link.subMenu.map(subLink => (
-                       <Link key={subLink.label} to={subLink.href.substring(2)} className="block text-gray-500 hover:text-aveksana-blue py-1">{subLink.label}</Link>
+                       <Link key={subLink.label} to={subLink.href.substring(2)} className="block text-brand-grey hover:text-brand-medium-teal py-1">{subLink.label}</Link>
                     ))}
                   </div>
                 )}
               </div>
             ))}
-            <Link to="/" className="block text-gray-600 hover:text-aveksana-blue py-2">Log In</Link>
+            <Link to="/" className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Log In</Link>
           </nav>
           <div className="px-6 pb-4">
-            <a href="/#demo" className="block w-full text-center bg-aveksana-blue text-white font-semibold px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Book a Demo</a>
+            <a href="/#demo" className="block w-full text-center bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</a>
           </div>
         </div>
       )}

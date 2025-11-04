@@ -5,11 +5,11 @@ import TestimonialCard from './TestimonialCard';
 
 const Testimonials = () => {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-brand-off-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Voices of Innovation</h2>
-          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">Voices of Innovation</h2>
+          <p className="mt-4 text-lg text-brand-dark-grey max-w-2xl mx-auto">
             Hear from students, supervisors, and corporate leaders who trust Aveksana.
           </p>
         </div>

@@ -30,7 +30,7 @@ const LandingPage = () => (
 function App() {
   return (
     <HashRouter>
-      <div className="bg-white font-sans text-gray-800">
+      <div className="bg-brand-off-white font-sans text-brand-dark-grey">
         <Header />
         <Routes>
           <Route path="/" element={<LandingPage />} />

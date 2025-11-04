@@ -72,7 +72,7 @@ const Footer = () => {
   };
 
   return (
-    <footer id="resources" className="bg-gray-800 text-white scroll-mt-24">
+    <footer id="resources" className="bg-brand-dark-teal text-white scroll-mt-24">
       <div className="container mx-auto px-6 py-16">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {footerLinkData.map(({ title, links }) => (
@@ -96,7 +96,7 @@ const Footer = () => {
             </div>
           ))}
         </div>
-        <div className="mt-16 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+        <div className="mt-16 pt-8 border-t border-brand-teal flex flex-col md:flex-row justify-between items-center text-center md:text-left">
           <p className="text-gray-400 order-2 md:order-1 mt-4 md:mt-0">&copy; {new Date().getFullYear()} Aveksana. All rights reserved.</p>
           <div className="order-1 md:order-2">
             <MicroCTA />
