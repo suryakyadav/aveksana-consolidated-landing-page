@@ -72,7 +72,7 @@ const Footer = () => {
   };
 
   return (
-    <footer id="resources" className="bg-brand-dark-teal text-white scroll-mt-24">
+    <footer className="bg-brand-dark-teal text-white">
       <div className="container mx-auto px-6 py-16">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {footerLinkData.map(({ title, links }) => (

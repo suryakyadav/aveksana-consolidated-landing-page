@@ -13,7 +13,18 @@ import ForIndividualsPage from './components/ForIndividualsPage';
 import ForUniversitiesPage from './components/ForUniversitiesPage';
 import ForCorporationsPage from './components/ForCorporationsPage';
 import { ModalProvider, useModal } from './contexts/ModalContext';
+import { AuthProvider } from './contexts/AuthContext';
 import RequestDemoModal from './components/RequestDemoModal';
+import Resources from './components/Resources';
+import LoginPage from './components/LoginPage';
+import DashboardPage from './components/DashboardPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import ProfilePage from './components/dashboard/ProfilePage';
+import IdeaGeneratorPage from './components/dashboard/IdeaGeneratorPage';
+import GrantsPage from './components/dashboard/GrantsPage';
+import PipelinePage from './components/dashboard/PipelinePage';
+import ProjectDetailPage from './components/dashboard/ProjectDetailPage';
+import ProductQuickViewModal from './components/ProductQuickViewModal';
 
 
 const LandingPage = () => {
@@ -25,6 +36,7 @@ const LandingPage = () => {
         <ProductSuite />
         <Testimonials />
         <TopicGenerator />
+        <Resources />
         <FinalCTA />
       </main>
     </>
@@ -32,7 +44,7 @@ const LandingPage = () => {
 };
 
 const AppContent = () => {
-  const { isDemoModalOpen, closeDemoModal } = useModal();
+  const { isDemoModalOpen, closeDemoModal, isQuickViewModalOpen, quickViewProduct, closeQuickViewModal } = useModal();
   return (
     <div className="bg-brand-off-white font-sans text-brand-dark-grey">
       <Header />
@@ -42,9 +54,23 @@ const AppContent = () => {
         <Route path="/solutions/for-individuals" element={<ForIndividualsPage />} />
         <Route path="/solutions/for-universities" element={<ForUniversitiesPage />} />
         <Route path="/solutions/for-corporations" element={<ForCorporationsPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/idea-generator" element={<IdeaGeneratorPage />} />
+          <Route path="/dashboard/grants" element={<GrantsPage />} />
+          <Route path="/dashboard/pipeline" element={<PipelinePage />} />
+          <Route path="/dashboard/project/:projectTitle" element={<ProjectDetailPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
       </Routes>
       <Footer />
       <RequestDemoModal isOpen={isDemoModalOpen} onClose={closeDemoModal} />
+      <ProductQuickViewModal 
+        isOpen={isQuickViewModalOpen} 
+        onClose={closeQuickViewModal} 
+        product={quickViewProduct} 
+      />
     </div>
   )
 }
@@ -54,7 +80,9 @@ function App() {
   return (
     <HashRouter>
       <ModalProvider>
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </ModalProvider>
     </HashRouter>
   );

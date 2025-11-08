@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { NavLink } from '../types';
 import { NAV_LINKS } from '../constants';
 import { ChevronDownIcon } from './icons';
 import { useModal } from '../contexts/ModalContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const DropdownMenu: React.FC<{ items: NavLink[]; closeDropdown: () => void }> = ({ items, closeDropdown }) => (
   <div className="absolute top-full left-0 mt-2 w-56 bg-brand-off-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
@@ -28,6 +29,8 @@ const Header = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const { openDemoModal } = useModal();
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,6 +55,12 @@ const Header = () => {
   const handleDemoClick = () => {
       setIsMobileMenuOpen(false);
       openDemoModal();
+  }
+
+  const handleLogout = () => {
+      logout();
+      setIsMobileMenuOpen(false);
+      navigate('/');
   }
 
   return (
@@ -85,8 +94,18 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex items-center space-x-4">
-          <Link to="/" className="text-brand-dark-grey hover:text-brand-medium-teal">Log In</Link>
-          <button onClick={openDemoModal} className="bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
+          {isAuthenticated ? (
+            <>
+              <Link to="/dashboard" className="font-semibold text-brand-dark-grey hover:text-brand-medium-teal">Dashboard</Link>
+              <Link to="/profile" className="font-semibold text-brand-dark-grey hover:text-brand-medium-teal">Profile</Link>
+              <button onClick={handleLogout} className="text-brand-dark-grey hover:text-brand-medium-teal">Log Out</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-brand-dark-grey hover:text-brand-medium-teal">Log In</Link>
+              <button onClick={openDemoModal} className="bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
+            </>
+          )}
         </div>
 
         <div className="md:hidden">
@@ -114,11 +133,21 @@ const Header = () => {
                 )}
               </div>
             ))}
-            <Link to="/" className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Log In</Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Dashboard</Link>
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Profile</Link>
+                <button onClick={handleLogout} className="block w-full text-left text-brand-dark-grey hover:text-brand-medium-teal py-2">Log Out</button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Log In</Link>
+            )}
           </nav>
-          <div className="px-6 pb-4">
-            <button onClick={handleDemoClick} className="block w-full text-center bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
-          </div>
+          {!isAuthenticated && (
+            <div className="px-6 pb-4">
+              <button onClick={handleDemoClick} className="block w-full text-center bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
+            </div>
+          )}
         </div>
       )}
     </header>
