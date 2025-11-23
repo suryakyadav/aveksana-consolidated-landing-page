@@ -1,3 +1,4 @@
+
 import type React from 'react';
 
 export interface NavLink {
@@ -32,15 +33,72 @@ export interface PipelineProject extends GeneratedIdea {
   budgetEstimate?: number;
   timeline?: string;
   scratchpad?: string;
+  commercialViability?: string;
+  marketAnalysis?: string;
+  environmentalImpact?: string;
+  societalImpact?: string;
+}
+
+export interface Activity {
+  type: 'project_access' | 'idea_saved';
+  title: string;
+  timestamp: string; // ISO string for serialization
+  link: string;
+}
+
+export type UserRole = 'admin' | 'team_lead' | 'researcher' | 'supervisor';
+
+export interface ChatMessage {
+  id: string;
+  name: string;
+  role: string;
+  message: string;
+  isUser: boolean;
+  timestamp: string;
+}
+
+export interface ProblemStatement {
+  context: string;
+  coreProblem: string;
+  constraints: string;
+  desiredOutcomes: string;
+  evaluationCriteria: string;
+  stakeholders: string;
+}
+
+export interface ImplementationItem {
+  id: string;
+  title: string;
+  description: string;
+  suggestedRole: string;
+  assignee?: string; // Name of the researcher assigned
+  assigneeAvatar?: string;
+  dueDate?: string;
+  status: 'pending' | 'in_progress' | 'completed';
+}
+
+export interface StrategicPlan {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  statement: ProblemStatement;
+  isShared: boolean;
+  sharedWith: { name: string; role: string; avatar?: string }[];
+  discussion: ChatMessage[];
+  implementation?: ImplementationItem[];
 }
 
 export interface User {
   name: string;
   email: string;
+  role: UserRole;
   organization: string;
   expertise: string[];
   savedIdeas?: GeneratedIdea[];
   pipelineProjects?: PipelineProject[];
+  recentActivity?: Activity[];
+  strategies?: StrategicPlan[];
 }
 
 export interface GeneratedIdea {
@@ -71,4 +129,8 @@ export interface RedTeamAnalysis {
     weaknesses: string[];
     assumptions: string[];
     questions: string[];
+}
+
+export interface GeneratedProposalSection {
+    text: string;
 }

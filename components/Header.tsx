@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { NavLink } from '../types';
@@ -29,7 +30,7 @@ const Header = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const { openDemoModal } = useModal();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -96,6 +97,9 @@ const Header = () => {
         <div className="hidden md:flex items-center space-x-4">
           {isAuthenticated ? (
             <>
+              {user?.role === 'admin' && (
+                 <span className="text-xs font-bold bg-red-100 text-red-800 px-2 py-1 rounded-md">ADMIN</span>
+              )}
               <Link to="/dashboard" className="font-semibold text-brand-dark-grey hover:text-brand-medium-teal">Dashboard</Link>
               <Link to="/profile" className="font-semibold text-brand-dark-grey hover:text-brand-medium-teal">Profile</Link>
               <button onClick={handleLogout} className="text-brand-dark-grey hover:text-brand-medium-teal">Log Out</button>
@@ -135,6 +139,9 @@ const Header = () => {
             ))}
             {isAuthenticated ? (
               <>
+                <div className="border-t border-brand-light-grey my-2 pt-2">
+                    <p className="text-sm text-brand-grey px-0 mb-2">Signed in as {user?.role}</p>
+                </div>
                 <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Dashboard</Link>
                 <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Profile</Link>
                 <button onClick={handleLogout} className="block w-full text-left text-brand-dark-grey hover:text-brand-medium-teal py-2">Log Out</button>

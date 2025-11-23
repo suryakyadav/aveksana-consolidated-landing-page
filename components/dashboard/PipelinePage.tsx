@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import type { PipelineStatus, PipelineProject } from '../../types';
@@ -131,13 +132,46 @@ const PipelinePage = () => {
         });
         return grouped;
     }, [projects]);
+
+    const getHeaderContent = () => {
+        if (user?.role === 'admin') {
+            return {
+                title: "Global R&D Pipeline",
+                desc: "Overview of all innovation projects across the organization."
+            };
+        } else if (user?.role === 'team_lead' || user?.role === 'supervisor') {
+             return {
+                title: "Team Innovation Pipeline",
+                desc: "Monitor and manage your team's project lifecycle."
+            };
+        }
+        return {
+            title: "My R&D Project Pipeline",
+            desc: "Visualize your personal innovation pipeline, from initial ideation to funded projects."
+        };
+    };
+
+    const { title, desc } = getHeaderContent();
     
     return (
         <main className="py-12 bg-brand-light-gray-blue min-h-[calc(100vh-150px)]">
             <div className="container mx-auto px-6">
-                <header className="mb-8">
-                    <h1 className="text-4xl font-bold text-brand-dark-teal">R&D Project Pipeline</h1>
-                    <p className="mt-2 text-lg text-brand-dark-grey">Visualize your innovation pipeline, from initial ideation to funded projects.</p>
+                <header className="mb-8 flex justify-between items-end">
+                    <div>
+                        <h1 className="text-4xl font-bold text-brand-dark-teal">{title}</h1>
+                        <p className="mt-2 text-lg text-brand-dark-grey">{desc}</p>
+                    </div>
+                     {(user?.role === 'admin' || user?.role === 'team_lead') && (
+                        <div className="hidden md:flex items-center gap-2">
+                            <span className="text-sm text-brand-dark-grey font-semibold">View:</span>
+                            <select className="bg-white border border-brand-light-grey rounded-md px-3 py-1 text-sm text-brand-dark-grey focus:ring-2 focus:ring-brand-medium-teal outline-none">
+                                <option>All Projects</option>
+                                <option>My Projects</option>
+                                <option>Team Alpha</option>
+                                <option>Team Beta</option>
+                            </select>
+                        </div>
+                     )}
                 </header>
                 
                 {projects.length === 0 ? (

@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PipelineStatus, ExperimentDesign, RedTeamAnalysis } from '../../types';
-import { generateResearchQuestions, generateExperimentDesigns, critiqueProposal } from '../../services/geminiService';
+import type { PipelineStatus, ExperimentDesign, RedTeamAnalysis, GeneratedProposalSection } from '../../types';
+import { generateResearchQuestions, generateExperimentDesigns, critiqueProposal, generateCommercialAnalysis, generateMarketAnalysis, generateImpactStatement, generateTechnicalPlan, generateFullGrantProposal } from '../../services/geminiService';
 import RetaserMatrix from './RetaserMatrix';
 import { ChartBarIcon, ClipboardListIcon, DatabaseIcon, PaperAirplaneIcon, ClockIcon, CheckCircleIcon } from '../icons';
+import TextAssistantModal from './TextAssistantModal';
+import ProposalTypeSelectorModal from './ProposalTypeSelectorModal';
+import ProposalViewerModal from './ProposalViewerModal';
 
 const statusConfig: Record<PipelineStatus, { color: string; bgColor: string }> = {
     'Ideation': { color: 'text-blue-800', bgColor: 'bg-blue-100' },
@@ -191,16 +194,30 @@ ${analysis.questions.map(item => `- ${item}`).join('\n')}
     );
 };
 
+type FormState = {
+    problemStatement: string;
+    proposedSolution: string;
+    methodology: string;
+    expectedOutcomes: string;
+    budgetEstimate: number | '';
+    timeline: string;
+    scratchpad: string;
+    commercialViability: string;
+    marketAnalysis: string;
+    environmentalImpact: string;
+    societalImpact: string;
+};
+
 const ProjectDetailPage = () => {
     const { projectTitle } = useParams<{ projectTitle: string }>();
-    const { user, updateProjectDetails, updateProjectStatus } = useAuth();
+    const { user, updateProjectDetails, updateProjectStatus, addActivity } = useAuth();
     const autoSaveTimeout = useRef<number | null>(null);
     
     const project = useMemo(() => 
         user?.pipelineProjects?.find(p => p.title === decodeURIComponent(projectTitle || ''))
     , [user?.pipelineProjects, projectTitle]);
     
-    const [formState, setFormState] = useState({
+    const [formState, setFormState] = useState<FormState>({
         problemStatement: '',
         proposedSolution: '',
         methodology: '',
@@ -208,6 +225,10 @@ const ProjectDetailPage = () => {
         budgetEstimate: '' as number | '',
         timeline: '',
         scratchpad: '',
+        commercialViability: '',
+        marketAnalysis: '',
+        environmentalImpact: '',
+        societalImpact: '',
     });
 
     const [isSaving, setIsSaving] = useState(false);
@@ -222,6 +243,25 @@ const ProjectDetailPage = () => {
         error: string | null;
     }>({ isOpen: false, mode: null, isLoading: false, content: null, error: null });
 
+    const [textAssistantState, setTextAssistantState] = useState<{
+        isOpen: boolean;
+        title: string;
+        isLoading: boolean;
+        content: string | null;
+        error: string | null;
+        targetField: keyof FormState | null;
+    }>({ isOpen: false, title: '', isLoading: false, content: null, error: null, targetField: null });
+
+    const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+    const [viewerState, setViewerState] = useState({
+        isOpen: false,
+        title: '',
+        isLoading: false,
+        content: null as string | null,
+        error: null as string | null,
+    });
+
+
     useEffect(() => {
         window.scrollTo(0, 0);
         if (project) {
@@ -233,9 +273,22 @@ const ProjectDetailPage = () => {
                 budgetEstimate: project.budgetEstimate || '',
                 timeline: project.timeline || '',
                 scratchpad: project.scratchpad || '',
+                commercialViability: project.commercialViability || '',
+                marketAnalysis: project.marketAnalysis || '',
+                environmentalImpact: project.environmentalImpact || '',
+                societalImpact: project.societalImpact || '',
             });
             setIsDirty(false);
             setIsSaved(false);
+
+            // Add activity log, ensuring not to add duplicates on re-renders
+            if (!user?.recentActivity?.[0] || user.recentActivity[0].title !== project.title || user.recentActivity[0].type !== 'project_access') {
+                addActivity({
+                    type: 'project_access',
+                    title: project.title,
+                    link: `/dashboard/project/${encodeURIComponent(project.title)}`
+                });
+            }
         }
     }, [project]);
 
@@ -286,7 +339,18 @@ const ProjectDetailPage = () => {
     
     const getProjectContextForAI = () => {
         if (!project) return '';
-        return `Title: ${project.title}\nOverview: ${project.overview}\nProblem Statement: ${formState.problemStatement}\nProposed Solution: ${formState.proposedSolution}\nMethodology: ${formState.methodology}\nExpected Outcomes: ${formState.expectedOutcomes}`;
+        return `
+Title: ${project.title}
+Overview: ${project.overview}
+Problem Statement: ${formState.problemStatement}
+Proposed Solution: ${formState.proposedSolution}
+Methodology: ${formState.methodology}
+Expected Outcomes: ${formState.expectedOutcomes}
+Commercial Viability: ${formState.commercialViability}
+Market Analysis: ${formState.marketAnalysis}
+Environmental Impact: ${formState.environmentalImpact}
+Societal Impact: ${formState.societalImpact}
+        `.trim();
     };
     
     const handleAssistantClick = async (mode: 'questions' | 'designs' | 'critique') => {
@@ -307,6 +371,41 @@ const ProjectDetailPage = () => {
             const error = err instanceof Error ? err.message : 'An unknown error occurred.';
             setAssistantState(prev => ({ ...prev, isLoading: false, error }));
         }
+    };
+
+    const handleTextAssistantClick = async (
+        mode: 'commercial' | 'market' | 'environmental' | 'societal',
+        title: string,
+        targetField: keyof FormState
+    ) => {
+        setTextAssistantState({ isOpen: true, title, isLoading: true, content: null, error: null, targetField });
+        try {
+            const context = getProjectContextForAI();
+            let result: GeneratedProposalSection;
+            if (mode === 'commercial') {
+                result = await generateCommercialAnalysis(context);
+            } else if (mode === 'market') {
+                result = await generateMarketAnalysis(context);
+            } else {
+                result = await generateImpactStatement(context, mode);
+            }
+            setTextAssistantState(prev => ({ ...prev, isLoading: false, content: result.text }));
+        } catch (err) {
+            const error = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setTextAssistantState(prev => ({ ...prev, isLoading: false, error }));
+        }
+    };
+
+    const handleAcceptText = (text: string) => {
+        if (textAssistantState.targetField) {
+            setFormState(prev => ({
+                ...prev,
+                [textAssistantState.targetField!]: text,
+            }));
+            setIsDirty(true);
+            setIsSaved(false);
+        }
+        setTextAssistantState(prev => ({ ...prev, isOpen: false }));
     };
     
     const handleSendExperimentToMethodology = (design: ExperimentDesign) => {
@@ -332,6 +431,46 @@ ${design.analysisMethods}
         setAssistantState(prev => ({ ...prev, isOpen: false }));
     };
 
+    const handleGenerateProposalClick = () => {
+        if (canGenerateProposal) {
+            setIsSelectorOpen(true);
+        } else {
+            alert('Please fill in the "Problem Statement" and "Proposed Solution" sections (with at least 11 characters each) to provide enough context for the AI to generate a meaningful proposal.');
+        }
+    };
+
+    const handleGenerateProposalSelect = async (type: 'technical' | 'grant') => {
+        setIsSelectorOpen(false);
+        const context = getProjectContextForAI();
+        const title = type === 'technical' ? 'Generated Technical R&D Plan' : 'Generated Grant Application';
+        setViewerState({ isOpen: true, title, isLoading: true, content: null, error: null });
+
+        try {
+            let result;
+            if (type === 'technical') {
+                result = await generateTechnicalPlan(context);
+            } else {
+                result = await generateFullGrantProposal(context);
+            }
+            setViewerState(prev => ({ ...prev, isLoading: false, content: result.text }));
+        } catch (err) {
+            const error = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setViewerState(prev => ({ ...prev, isLoading: false, error }));
+        }
+    };
+
+    const handleAppendToScratchpad = (text: string) => {
+        setFormState(prev => ({
+            ...prev,
+            scratchpad: prev.scratchpad ? `${prev.scratchpad}\n\n---\n\n${text}` : text
+        }));
+        setIsDirty(true);
+        setIsSaved(false);
+        setViewerState(prev => ({...prev, isOpen: false}));
+    };
+
+    const canGenerateProposal = formState.problemStatement.trim().length > 10 && formState.proposedSolution.trim().length > 10;
+
 
     if (!project) {
         return (
@@ -352,14 +491,14 @@ ${design.analysisMethods}
     const getSaveButtonText = () => {
         if (isSaving) return 'Saving...';
         if (isSaved) return '✓ Saved';
-        return 'Save Proposal';
+        return 'Save Changes';
     };
 
     return (
         <main className="py-12 bg-brand-light-gray-blue min-h-[calc(100vh-200px)]">
             {assistantState.isOpen && (
                 <AssistantModal 
-                    title={assistantState.mode === 'questions' ? 'Suggested Research Questions' : assistantState.mode === 'designs' ? 'Suggested Experiment Designs' : 'AI Red Team Analysis'}
+                    title={assistantState.mode === 'questions' ? 'Suggested Research Questions' : assistantState.mode === 'designs' ? 'Suggested Experiment Designs' : 'Proposal Strength Analysis'}
                     content={assistantState.content}
                     isLoading={assistantState.isLoading}
                     error={assistantState.error}
@@ -368,6 +507,29 @@ ${design.analysisMethods}
                     onSendToMethodology={handleSendExperimentToMethodology}
                 />
             )}
+            <TextAssistantModal
+                isOpen={textAssistantState.isOpen}
+                onClose={() => setTextAssistantState(prev => ({ ...prev, isOpen: false }))}
+                title={textAssistantState.title}
+                isLoading={textAssistantState.isLoading}
+                error={textAssistantState.error}
+                content={textAssistantState.content}
+                onAccept={handleAcceptText}
+            />
+             <ProposalTypeSelectorModal 
+                isOpen={isSelectorOpen}
+                onClose={() => setIsSelectorOpen(false)}
+                onSelect={handleGenerateProposalSelect}
+            />
+            <ProposalViewerModal
+                isOpen={viewerState.isOpen}
+                onClose={() => setViewerState(prev => ({ ...prev, isOpen: false }))}
+                title={viewerState.title}
+                isLoading={viewerState.isLoading}
+                error={viewerState.error}
+                content={viewerState.content}
+                onAppend={handleAppendToScratchpad}
+            />
             <div className="container mx-auto px-6 max-w-6xl">
                 <header className="mb-8">
                     <Link to="/dashboard/pipeline" className="text-brand-grey hover:text-brand-medium-teal transition-colors mb-4 block">
@@ -384,54 +546,88 @@ ${design.analysisMethods}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Proposal Form */}
                     <div className="lg:col-span-2 space-y-8">
-                        <div className="bg-brand-off-white p-8 rounded-xl shadow-lg border border-brand-light-grey">
-                            <h2 className="text-2xl font-bold text-brand-dark-teal mb-6">Proposal Development</h2>
-                            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
-                                <div>
-                                    <label htmlFor="problemStatement" className="block text-sm font-medium text-brand-dark-grey mb-1">Problem Statement</label>
-                                    <textarea id="problemStatement" value={formState.problemStatement} onChange={handleFormChange} className={textareaClasses} placeholder="What specific problem does this research address?"></textarea>
-                                </div>
-                                <div>
-                                    <label htmlFor="proposedSolution" className="block text-sm font-medium text-brand-dark-grey mb-1">Proposed Solution</label>
-                                    <textarea id="proposedSolution" value={formState.proposedSolution} onChange={handleFormChange} className={textareaClasses} placeholder="Describe your proposed method or solution in detail."></textarea>
-                                </div>
-                                <div>
-                                    <label htmlFor="methodology" className="block text-sm font-medium text-brand-dark-grey mb-1">Methodology</label>
-                                    <textarea id="methodology" value={formState.methodology} onChange={handleFormChange} className={textareaClasses} placeholder="What research methodologies will be employed? (e.g., quantitative analysis, user studies, etc.)"></textarea>
-                                </div>
-                                <div>
-                                    <label htmlFor="expectedOutcomes" className="block text-sm font-medium text-brand-dark-grey mb-1">Expected Outcomes & Impact</label>
-                                    <textarea id="expectedOutcomes" value={formState.expectedOutcomes} onChange={handleFormChange} className={textareaClasses} placeholder="What are the anticipated results, deliverables, and potential impact?"></textarea>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label htmlFor="budgetEstimate" className="block text-sm font-medium text-brand-dark-grey mb-1">Budget Estimate ($)</label>
-                                        <input id="budgetEstimate" type="number" value={formState.budgetEstimate} onChange={handleFormChange} className={inputClasses} placeholder="e.g., 50000" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="timeline" className="block text-sm font-medium text-brand-dark-grey mb-1">Estimated Timeline</label>
-                                        <input id="timeline" type="text" value={formState.timeline} onChange={handleFormChange} className={inputClasses} placeholder="e.g., 6-9 Months" />
-                                    </div>
-                                </div>
-                                <div className="pt-2 flex items-center gap-4">
+                        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-8">
+                            <div className="bg-brand-off-white p-8 rounded-xl shadow-lg border border-brand-light-grey">
+                                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                                    <h2 className="text-2xl font-bold text-brand-dark-teal">Proposal Development</h2>
                                     <button
-                                        type="submit"
-                                        disabled={isSaving || !isDirty}
-                                        className="w-36 text-center bg-brand-medium-teal text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-brand-teal disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                        type="button"
+                                        onClick={handleGenerateProposalClick}
+                                        className="bg-brand-teal text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-brand-dark-teal transition-colors"
                                     >
-                                        {getSaveButtonText()}
+                                        Generate Proposal
                                     </button>
-                                    <div className="relative h-6 w-48">
-                                        <span className={`absolute inset-0 flex items-center text-sm font-semibold text-brand-dark-grey transition-opacity duration-300 ${isSaving ? 'opacity-100' : 'opacity-0'}`}>
-                                            Saving changes...
-                                        </span>
-                                        <span className={`absolute inset-0 flex items-center text-sm font-semibold text-brand-seafoam transition-opacity duration-300 ${isSaved ? 'opacity-100' : 'opacity-0'}`}>
-                                            All changes saved.
-                                        </span>
+                                </div>
+                                <div className="space-y-6">
+                                    <div>
+                                        <label htmlFor="problemStatement" className="block text-sm font-medium text-brand-dark-grey mb-1">Problem Statement</label>
+                                        <textarea id="problemStatement" value={formState.problemStatement} onChange={handleFormChange} className={textareaClasses} placeholder="What specific problem does this research address?"></textarea>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="proposedSolution" className="block text-sm font-medium text-brand-dark-grey mb-1">Proposed Solution</label>
+                                        <textarea id="proposedSolution" value={formState.proposedSolution} onChange={handleFormChange} className={textareaClasses} placeholder="Describe your proposed method or solution in detail."></textarea>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="methodology" className="block text-sm font-medium text-brand-dark-grey mb-1">Methodology</label>
+                                        <textarea id="methodology" value={formState.methodology} onChange={handleFormChange} className={textareaClasses} placeholder="What research methodologies will be employed? (e.g., quantitative analysis, user studies, etc.)"></textarea>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="expectedOutcomes" className="block text-sm font-medium text-brand-dark-grey mb-1">Expected Outcomes & Impact</label>
+                                        <textarea id="expectedOutcomes" value={formState.expectedOutcomes} onChange={handleFormChange} className={textareaClasses} placeholder="What are the anticipated results, deliverables, and potential impact?"></textarea>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label htmlFor="budgetEstimate" className="block text-sm font-medium text-brand-dark-grey mb-1">Budget Estimate ($)</label>
+                                            <input id="budgetEstimate" type="number" value={formState.budgetEstimate} onChange={handleFormChange} className={inputClasses} placeholder="e.g., 50000" />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="timeline" className="block text-sm font-medium text-brand-dark-grey mb-1">Estimated Timeline</label>
+                                            <input id="timeline" type="text" value={formState.timeline} onChange={handleFormChange} className={inputClasses} placeholder="e.g., 6-9 Months" />
+                                        </div>
                                     </div>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+
+                             <div className="bg-brand-off-white p-8 rounded-xl shadow-lg border border-brand-light-grey">
+                                <h2 className="text-2xl font-bold text-brand-dark-teal mb-6">Business Case & Impact</h2>
+                                <div className="space-y-6">
+                                    <div>
+                                        <label htmlFor="commercialViability" className="block text-sm font-medium text-brand-dark-grey mb-1">Commercial Viability / Business Case</label>
+                                        <textarea id="commercialViability" value={formState.commercialViability} onChange={handleFormChange} className={textareaClasses} placeholder="Describe the commercial potential, target market, and business model."></textarea>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="marketAnalysis" className="block text-sm font-medium text-brand-dark-grey mb-1">Market Analysis</label>
+                                        <textarea id="marketAnalysis" value={formState.marketAnalysis} onChange={handleFormChange} className={textareaClasses} placeholder="Analyze the market need, competitors, and opportunity."></textarea>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="environmentalImpact" className="block text-sm font-medium text-brand-dark-grey mb-1">Environmental Impact</label>
+                                        <textarea id="environmentalImpact" value={formState.environmentalImpact} onChange={handleFormChange} className={textareaClasses} placeholder="Detail the potential environmental benefits (e.g., sustainability, efficiency)."></textarea>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="societalImpact" className="block text-sm font-medium text-brand-dark-grey mb-1">Societal Impact</label>
+                                        <textarea id="societalImpact" value={formState.societalImpact} onChange={handleFormChange} className={textareaClasses} placeholder="Outline the benefits to society (e.g., public health, job creation)."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-2 flex items-center gap-4">
+                                <button
+                                    type="submit"
+                                    disabled={isSaving || !isDirty}
+                                    className="w-40 text-center bg-brand-medium-teal text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-brand-teal disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {getSaveButtonText()}
+                                </button>
+                                <div className="relative h-6 w-48">
+                                    <span className={`absolute inset-0 flex items-center text-sm font-semibold text-brand-dark-grey transition-opacity duration-300 ${isSaving ? 'opacity-100' : 'opacity-0'}`}>
+                                        Saving changes...
+                                    </span>
+                                    <span className={`absolute inset-0 flex items-center text-sm font-semibold text-brand-seafoam transition-opacity duration-300 ${isSaved ? 'opacity-100' : 'opacity-0'}`}>
+                                        All changes saved.
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
                     </div>
 
                     {/* Right Column: Original Idea Details */}
@@ -512,6 +708,19 @@ ${design.analysisMethods}
                         <div className="bg-brand-off-white p-6 rounded-xl shadow-md border border-brand-light-grey">
                             <h3 className="text-xl font-bold text-brand-dark-teal mb-4">AI Drafting Assistant</h3>
                             <div className="space-y-3">
+                                <button onClick={() => handleTextAssistantClick('commercial', 'Draft Commercial Viability', 'commercialViability')} className="w-full text-left font-semibold text-brand-medium-teal hover:text-brand-teal transition-colors p-3 bg-brand-light-gray-blue/60 hover:bg-brand-light-gray-blue rounded-md">
+                                    Draft Commercial Viability &rarr;
+                                </button>
+                                <button onClick={() => handleTextAssistantClick('market', 'Draft Market Analysis', 'marketAnalysis')} className="w-full text-left font-semibold text-brand-medium-teal hover:text-brand-teal transition-colors p-3 bg-brand-light-gray-blue/60 hover:bg-brand-light-gray-blue rounded-md">
+                                    Draft Market Analysis &rarr;
+                                </button>
+                                <button onClick={() => handleTextAssistantClick('societal', 'Draft Societal Impact', 'societalImpact')} className="w-full text-left font-semibold text-brand-medium-teal hover:text-brand-teal transition-colors p-3 bg-brand-light-gray-blue/60 hover:bg-brand-light-gray-blue rounded-md">
+                                    Draft Societal Impact &rarr;
+                                </button>
+                                <button onClick={() => handleTextAssistantClick('environmental', 'Draft Environmental Impact', 'environmentalImpact')} className="w-full text-left font-semibold text-brand-medium-teal hover:text-brand-teal transition-colors p-3 bg-brand-light-gray-blue/60 hover:bg-brand-light-gray-blue rounded-md">
+                                    Draft Environmental Impact &rarr;
+                                </button>
+                                <hr className="border-brand-light-grey my-2"/>
                                 <button onClick={() => handleAssistantClick('questions')} className="w-full text-left font-semibold text-brand-medium-teal hover:text-brand-teal transition-colors p-3 bg-brand-light-gray-blue/60 hover:bg-brand-light-gray-blue rounded-md">
                                     Formulate Research Questions &rarr;
                                 </button>
@@ -519,7 +728,7 @@ ${design.analysisMethods}
                                     Suggest Experiment Design &rarr;
                                 </button>
                                 <button onClick={() => handleAssistantClick('critique')} className="w-full text-left font-semibold text-brand-medium-teal hover:text-brand-teal transition-colors p-3 bg-brand-light-gray-blue/60 hover:bg-brand-light-gray-blue rounded-md">
-                                    Critique Proposal (AI Red Team) &rarr;
+                                    Strengthen Your Proposal &rarr;
                                 </button>
                             </div>
                         </div>

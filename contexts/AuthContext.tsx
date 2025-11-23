@@ -1,5 +1,6 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import type { User, GeneratedIdea, PipelineProject, PipelineStatus } from '../types';
+import type { User, GeneratedIdea, PipelineProject, PipelineStatus, Activity, StrategicPlan } from '../types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -11,6 +12,10 @@ interface AuthContextType {
   promoteIdeaToPipeline: (idea: GeneratedIdea) => void;
   updateProjectStatus: (projectTitle: string, newStatus: PipelineStatus) => void;
   updateProjectDetails: (projectTitle: string, details: Partial<PipelineProject>) => void;
+  addActivity: (activity: Omit<Activity, 'timestamp'>) => void;
+  saveStrategy: (strategy: StrategicPlan) => void;
+  updateStrategy: (id: string, updates: Partial<StrategicPlan>) => void;
+  deleteStrategy: (id: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +29,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ...userData,
         savedIdeas: userData.savedIdeas || [],
         pipelineProjects: userData.pipelineProjects || [],
+        recentActivity: userData.recentActivity || [],
+        strategies: userData.strategies || [],
     };
     setIsAuthenticated(true);
     setUser(userWithData);
@@ -97,9 +104,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
+  const addActivity = (activity: Omit<Activity, 'timestamp'>) => {
+    setUser(currentUser => {
+        if (!currentUser) return null;
+        const newActivity: Activity = {
+            ...activity,
+            timestamp: new Date().toISOString(),
+        };
+        // Add new activity and keep the list to a max of 5 items
+        const updatedActivity = [newActivity, ...(currentUser.recentActivity || [])].slice(0, 5);
+        return { ...currentUser, recentActivity: updatedActivity };
+    });
+  };
+
+  const saveStrategy = (strategy: StrategicPlan) => {
+      setUser(currentUser => {
+          if (!currentUser) return null;
+          const existing = currentUser.strategies || [];
+          const index = existing.findIndex(s => s.id === strategy.id);
+          let newStrategies;
+          if (index >= 0) {
+              newStrategies = existing.map(s => s.id === strategy.id ? strategy : s);
+          } else {
+              newStrategies = [strategy, ...existing]; // Add to top
+          }
+          return { ...currentUser, strategies: newStrategies };
+      });
+  };
+
+  const updateStrategy = (id: string, updates: Partial<StrategicPlan>) => {
+      setUser(currentUser => {
+          if (!currentUser || !currentUser.strategies) return currentUser;
+          const newStrategies = currentUser.strategies.map(s => 
+              s.id === id ? { ...s, ...updates, updatedAt: new Date().toISOString() } : s
+          );
+          return { ...currentUser, strategies: newStrategies };
+      });
+  };
+
+  const deleteStrategy = (id: string) => {
+    setUser(currentUser => {
+        if (!currentUser || !currentUser.strategies) return currentUser;
+        const newStrategies = currentUser.strategies.filter(s => s.id !== id);
+        return { ...currentUser, strategies: newStrategies };
+    });
+  };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateSavedIdeas, updatePipelineProjects, promoteIdeaToPipeline, updateProjectStatus, updateProjectDetails }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateSavedIdeas, updatePipelineProjects, promoteIdeaToPipeline, updateProjectStatus, updateProjectDetails, addActivity, saveStrategy, updateStrategy, deleteStrategy }}>
       {children}
     </AuthContext.Provider>
   );

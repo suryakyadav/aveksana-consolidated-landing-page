@@ -43,10 +43,16 @@ const ProfilePage = () => {
         
         <div className="bg-brand-off-white p-8 rounded-xl shadow-lg border border-brand-light-grey">
             <form onSubmit={handleSave} className="space-y-6">
-                 <div>
-                    <label className="block text-sm font-medium text-brand-dark-grey mb-1">Full Name</label>
-                    <input type="text" value={user.name} disabled className={inputClasses} />
-                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-brand-dark-grey mb-1">Full Name</label>
+                        <input type="text" value={user.name} disabled className={inputClasses} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-brand-dark-grey mb-1">Role</label>
+                        <input type="text" value={user.role.charAt(0).toUpperCase() + user.role.slice(1).replace('_', ' ')} disabled className={`${inputClasses} capitalize`} />
+                    </div>
+                 </div>
                  <div>
                     <label className="block text-sm font-medium text-brand-dark-grey mb-1">Email Address</label>
                     <input type="email" value={user.email} disabled className={inputClasses} />

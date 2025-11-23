@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
-import type { GeneratedIdea, LiteratureAnalysis, ExperimentDesign, RedTeamAnalysis } from '../types';
+import type { GeneratedIdea, LiteratureAnalysis, ExperimentDesign, RedTeamAnalysis, GeneratedProposalSection, ProblemStatement, ImplementationItem } from '../types';
 
 
 export async function generateTopics(baseTopic: string): Promise<string[]> {
@@ -355,5 +356,266 @@ export async function critiqueProposal(projectDetails: string): Promise<RedTeamA
   } catch (error) {
     console.error("Error critiquing proposal:", error);
     throw new Error("Failed to generate proposal critique.");
+  }
+}
+
+async function generateProposalSection(prompt: string): Promise<GeneratedProposalSection> {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("API key is not configured");
+  const ai = new GoogleGenAI({ apiKey });
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-pro",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            text: {
+              type: Type.STRING,
+              description: "The generated text for the proposal section."
+            }
+          },
+          required: ['text']
+        }
+      }
+    });
+    const result = JSON.parse(response.text.trim());
+    if (result && typeof result.text === 'string') {
+      return result;
+    }
+    throw new Error("Invalid response format for proposal section generation.");
+  } catch (error) {
+    console.error("Error generating proposal section:", error);
+    throw error;
+  }
+}
+
+export async function generateCommercialAnalysis(projectDetails: string): Promise<GeneratedProposalSection> {
+  const prompt = `Based on the provided research project details, draft a "Commercial Viability" section suitable for a government grant application (e.g., Business Finland). The tone should be professional and confident. Focus on: 1. Target Market & Size: Identify the primary industries or customer segments that would benefit. 2. Business Model: How could this research be commercialized (e.g., licensing, new product, service)? 3. Competitive Advantage: What makes this approach unique and defensible compared to existing solutions? Project Details:\n\n${projectDetails}`;
+  try {
+    return await generateProposalSection(prompt);
+  } catch (error) {
+    throw new Error("Failed to generate commercial viability analysis.");
+  }
+}
+
+export async function generateMarketAnalysis(projectDetails: string): Promise<GeneratedProposalSection> {
+  const prompt = `Based on the provided research project details, draft a "Market Analysis" section for a grant proposal. Focus on: 1. Market Need: Clearly articulate the existing gap or problem in the market. 2. Competitive Landscape: Briefly mention key existing players or alternative technologies and highlight their limitations. 3. Market Opportunity: Explain why now is the right time for this innovation. Project Details:\n\n${projectDetails}`;
+  try {
+    return await generateProposalSection(prompt);
+  } catch (error) {
+    throw new Error("Failed to generate market analysis.");
+  }
+}
+
+export async function generateImpactStatement(projectDetails: string, impactType: 'societal' | 'environmental'): Promise<GeneratedProposalSection> {
+  const prompt = `Based on the provided research project details, draft a compelling "${impactType} Impact" statement for a grant proposal. The statement should be concise and powerful. For environmental impact, focus on sustainability, resource efficiency, or reduction in negative externalities. For societal impact, focus on benefits to public health, quality of life, job creation, or other social goods. Project Details:\n\n${projectDetails}`;
+  try {
+    return await generateProposalSection(prompt);
+  } catch (error) {
+    throw new Error(`Failed to generate ${impactType} impact statement.`);
+  }
+}
+
+export async function generateTechnicalPlan(projectDetails: string): Promise<GeneratedProposalSection> {
+  const prompt = `Based on the provided research project details, generate a concise "Technical R&D Plan" suitable for internal review by a technical team. The tone should be direct, scientific, and focused on lab-level execution. The output should be well-structured, using clear headings (like ## Heading). Do not use markdown bolding or italics. The plan must include the following sections:
+1.  **Project Objective:** A single, clear sentence defining the primary goal.
+2.  **Hypothesis:** State the core hypothesis to be tested.
+3.  **Experimental Protocol / Methodology:** Detail the key steps, materials, and equipment required for the experiment. Be specific enough for a fellow researcher to understand the plan.
+4.  **Key Milestones & Timeline:** Outline 3-4 key milestones with an estimated timeline (e.g., Week 1-2, Month 2).
+5.  **Success Criteria / KPIs:** Define the specific, measurable metrics that will determine the success of the experiment.
+
+Project Details:
+${projectDetails}`;
+  try {
+    return await generateProposalSection(prompt);
+  } catch (error) {
+    throw new Error("Failed to generate Technical R&D Plan.");
+  }
+}
+
+export async function generateFullGrantProposal(projectDetails: string): Promise<GeneratedProposalSection> {
+  const prompt = `Act as an expert grant writer. Based on the provided research project details, generate a comprehensive and persuasive grant application proposal, tailored for a funding body like Business Finland or Horizon Europe. The output must be well-structured with clear headings (like ## Heading) and professional language. Do not use markdown bolding or italics. The proposal must include the following sections:
+1.  **Executive Summary:** A compelling overview of the entire project, including the problem, solution, impact, and requested funding.
+2.  **Introduction & Problem Statement:** Detail the problem being addressed and the current state-of-the-art.
+3.  **Project Goals & Objectives:** List the main goals and specific, measurable, achievable, relevant, and time-bound (SMART) objectives.
+4.  **Technical Approach & Methodology:** Describe the research methodology, work packages, and technical implementation plan in detail.
+5.  **Commercialization & Go-to-Market Strategy:** Cover the market analysis, business model, competitive advantages, and plan for commercializing the results.
+6.  **Societal & Environmental Impact:** Clearly articulate the broader benefits of the project.
+7.  **Project Team & Resources:** Briefly describe the key personnel and resources required.
+8.  **Risk Assessment & Mitigation Plan:** Identify potential technical and commercial risks and propose mitigation strategies.
+
+Project Details:
+${projectDetails}`;
+  try {
+    return await generateProposalSection(prompt);
+  } catch (error) {
+    throw new Error("Failed to generate Full Grant Application.");
+  }
+}
+
+export async function generateProblemStatement(briefDescription: string): Promise<ProblemStatement> {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("API key is not configured");
+
+  const ai = new GoogleGenAI({ apiKey });
+  const prompt = `Act as an expert R&D strategist. Based on the following brief description of a department's situation, draft a structured problem statement.
+  
+  The statement must strictly follow these sections:
+  1. Context (Why this matters)
+  2. The Core Problem (Gap between current and desired state)
+  3. Constraints (Limitations like budget, timeline, regs)
+  4. Desired Outcomes (Measurable end states)
+  5. Evaluation Criteria (Quantitative/Qualitative factors)
+  6. Stakeholders (Who is affected)
+
+  Situation Description: "${briefDescription}"`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            context: { type: Type.STRING, description: "Briefly describe the environment or situation that makes the problem important." },
+            coreProblem: { type: Type.STRING, description: "State the issue as a gap between the current state and the desired state." },
+            constraints: { type: Type.STRING, description: "List practical limitations—budget, timelines, regulatory requirements, technical boundaries." },
+            desiredOutcomes: { type: Type.STRING, description: "Define measurable, observable end states." },
+            evaluationCriteria: { type: Type.STRING, description: "Specify the quantitative and qualitative factors that determine whether a proposed solution is viable." },
+            stakeholders: { type: Type.STRING, description: "Identify internal or external groups whose needs must be addressed." },
+          },
+          required: ['context', 'coreProblem', 'constraints', 'desiredOutcomes', 'evaluationCriteria', 'stakeholders']
+        }
+      }
+    });
+
+    const result = JSON.parse(response.text.trim());
+    if (result && result.context) {
+      return result;
+    }
+    throw new Error("Invalid response format for problem statement generation.");
+  } catch (error) {
+    console.error("Error generating problem statement:", error);
+    throw new Error("Failed to generate problem statement.");
+  }
+}
+
+export async function generateTeamCritique(statement: ProblemStatement): Promise<{ name: string; role: string; message: string }[]> {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("API key is not configured");
+
+  const ai = new GoogleGenAI({ apiKey });
+  const prompt = `Act as the senior leadership team reviewing this R&D problem statement. 
+  
+  Problem Statement Context:
+  ${JSON.stringify(statement)}
+
+  Generate 3 distinct, constructive, and challenging critiques or questions ("sparring") from different perspectives (e.g., Engineering, Product, Finance, Operations). The personas should sound like experienced executives.
+  
+  The output must be a JSON array of objects with the following structure:
+  [
+    {
+      "name": "Name of the persona (e.g., Sarah Chen)",
+      "role": "Role (e.g., VP of Engineering)",
+      "message": "The critique or question."
+    }
+  ]
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              role: { type: Type.STRING },
+              message: { type: Type.STRING }
+            },
+            required: ['name', 'role', 'message']
+          }
+        }
+      }
+    });
+
+    const result = JSON.parse(response.text.trim());
+    if (Array.isArray(result)) {
+      return result;
+    }
+    throw new Error("Invalid response format.");
+  } catch (error) {
+    console.error("Error generating team critique:", error);
+    return [
+       { name: "System", role: "AI Assistant", message: "Unable to generate team feedback at this time. Please try again." }
+    ];
+  }
+}
+
+export async function generateImplementationPlan(statement: ProblemStatement): Promise<ImplementationItem[]> {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("API key is not configured");
+
+  const ai = new GoogleGenAI({ apiKey });
+  const prompt = `Based on the following R&D Problem Statement, generate a structured implementation plan.
+  
+  Problem Statement:
+  ${JSON.stringify(statement)}
+
+  Break this down into 5-7 concrete, actionable steps or work packages for an R&D team. 
+  For each step, provide:
+  1. A clear title.
+  2. A brief description of the action.
+  3. A suggested specific role (e.g., "Senior Data Scientist", "Materials Engineer", "Product Owner") best suited to lead this task.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            plan: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                  suggestedRole: { type: Type.STRING },
+                },
+                required: ['title', 'description', 'suggestedRole']
+              }
+            }
+          },
+          required: ['plan']
+        }
+      }
+    });
+
+    const result = JSON.parse(response.text.trim());
+    if (result && Array.isArray(result.plan)) {
+      return result.plan.map((item: any, index: number) => ({
+        ...item,
+        id: `task-${Date.now()}-${index}`,
+        status: 'pending'
+      }));
+    }
+    throw new Error("Invalid response format for implementation plan.");
+  } catch (error) {
+    console.error("Error generating implementation plan:", error);
+    throw new Error("Failed to generate implementation plan.");
   }
 }

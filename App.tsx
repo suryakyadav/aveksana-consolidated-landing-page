@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
@@ -25,6 +26,9 @@ import GrantsPage from './components/dashboard/GrantsPage';
 import PipelinePage from './components/dashboard/PipelinePage';
 import ProjectDetailPage from './components/dashboard/ProjectDetailPage';
 import ProductQuickViewModal from './components/ProductQuickViewModal';
+import AnalyticsPage from './components/dashboard/AnalyticsPage';
+import StrategyPage from './components/dashboard/StrategyPage';
+import MyTasksPage from './components/dashboard/MyTasksPage';
 
 
 const LandingPage = () => {
@@ -60,6 +64,9 @@ const AppContent = () => {
           <Route path="/dashboard/idea-generator" element={<IdeaGeneratorPage />} />
           <Route path="/dashboard/grants" element={<GrantsPage />} />
           <Route path="/dashboard/pipeline" element={<PipelinePage />} />
+          <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
+          <Route path="/dashboard/strategy" element={<StrategyPage />} />
+          <Route path="/dashboard/tasks" element={<MyTasksPage />} />
           <Route path="/dashboard/project/:projectTitle" element={<ProjectDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>

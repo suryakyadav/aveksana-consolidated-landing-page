@@ -18,7 +18,7 @@ const IdeaGeneratorPage = () => {
   const [fileName, setFileName] = useState<string | null>(null);
   const [modalForIdea, setModalForIdea] = useState<GeneratedIdea | null>(null);
   const [toastMessage, setToastMessage] = useState('');
-  const { user, updateSavedIdeas, promoteIdeaToPipeline } = useAuth();
+  const { user, updateSavedIdeas, promoteIdeaToPipeline, addActivity } = useAuth();
   const navigate = useNavigate();
   const savedIdeas = user?.savedIdeas || [];
   const pipelineProjects = user?.pipelineProjects || [];
@@ -117,6 +117,11 @@ const IdeaGeneratorPage = () => {
             const isAlreadySaved = savedIdeas.some(idea => idea.title === modalForIdea.title);
             if (!isAlreadySaved) {
                 updateSavedIdeas([...savedIdeas, modalForIdea]);
+                addActivity({
+                    type: 'idea_saved',
+                    title: modalForIdea.title,
+                    link: '/dashboard/idea-generator'
+                });
             }
             setModalForIdea(null);
             setToastMessage("Idea saved! Manage it in 'Your Saved Ideas' below.");
@@ -127,6 +132,11 @@ const IdeaGeneratorPage = () => {
     const handleAddToPipelineAndGo = () => {
         if (modalForIdea) {
             promoteIdeaToPipeline(modalForIdea);
+            addActivity({
+                type: 'idea_saved',
+                title: modalForIdea.title,
+                link: '/dashboard/pipeline'
+            });
             setModalForIdea(null);
             navigate('/dashboard/pipeline');
         }
