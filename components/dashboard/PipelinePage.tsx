@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import type { PipelineStatus, PipelineProject } from '../../types';
 import { Link } from 'react-router-dom';
+import { FlagIcon } from '../icons';
 
 const GapScoreBadge = ({ score }: { score: number }) => {
     const getColor = () => {
@@ -17,12 +18,17 @@ const GapScoreBadge = ({ score }: { score: number }) => {
     )
 };
 
-const ProjectCard: React.FC<{ project: PipelineProject; onDragStart: (e: React.DragEvent<HTMLDivElement>, projectTitle: string) => void }> = ({ project, onDragStart }) => (
+const ProjectCard: React.FC<{ project: PipelineProject; priorityTitle?: string; onDragStart: (e: React.DragEvent<HTMLDivElement>, projectTitle: string) => void }> = ({ project, priorityTitle, onDragStart }) => (
     <Link to={`/dashboard/project/${encodeURIComponent(project.title)}`} className="block">
         <div 
             draggable
             onDragStart={(e) => onDragStart(e, project.title)}
             className="bg-white p-4 rounded-lg shadow-sm border border-brand-light-grey mb-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
+            {priorityTitle && (
+                <div className="mb-2 flex items-center gap-1.5 bg-brand-light-gray-blue text-brand-dark-teal text-[10px] font-bold px-2 py-1 rounded-full w-fit">
+                    <FlagIcon /> Aligned: {priorityTitle}
+                </div>
+            )}
             <h4 className="font-bold text-brand-dark-teal text-md">{project.title}</h4>
             <p className="text-sm text-brand-dark-grey mt-1 line-clamp-2">{project.overview}</p>
             <div className="mt-3 flex justify-between items-center">
@@ -41,9 +47,10 @@ const PipelineColumn: React.FC<{
     title: PipelineStatus, 
     projects: PipelineProject[], 
     color: string,
+    strategies: any[],
     onDragStart: (e: React.DragEvent<HTMLDivElement>, projectTitle: string) => void,
     onDrop: (e: React.DragEvent<HTMLDivElement>, status: PipelineStatus) => void,
-}> = ({ title, projects, color, onDragStart, onDrop }) => {
+}> = ({ title, projects, color, strategies, onDragStart, onDrop }) => {
     const [isDraggedOver, setIsDraggedOver] = useState(false);
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -65,6 +72,15 @@ const PipelineColumn: React.FC<{
         setIsDraggedOver(false);
     };
     
+    // Helper to find priority title
+    const getPriorityTitle = (project: PipelineProject) => {
+        if (!project.relatedStrategyId || !project.relatedPriorityId) return undefined;
+        const strategy = strategies.find(s => s.id === project.relatedStrategyId);
+        if (!strategy || !strategy.priorities) return undefined;
+        const priority = strategy.priorities.find((p: any) => p.id === project.relatedPriorityId);
+        return priority ? priority.title : undefined;
+    };
+    
     return (
     <div 
         className={`bg-brand-light-gray-blue/70 rounded-lg p-4 w-full md:w-1/4 flex-shrink-0 transition-all duration-300 ease-in-out ${isDraggedOver ? 'bg-brand-light-gray-blue ring-2 ring-brand-medium-teal' : 'ring-0 ring-transparent'}`}
@@ -79,7 +95,14 @@ const PipelineColumn: React.FC<{
         </div>
         <div className="h-[60vh] overflow-y-auto pr-2">
             {projects.length > 0 ? (
-                projects.map(project => <ProjectCard key={project.title} project={project} onDragStart={onDragStart} />)
+                projects.map(project => (
+                    <ProjectCard 
+                        key={project.title} 
+                        project={project} 
+                        priorityTitle={getPriorityTitle(project)}
+                        onDragStart={onDragStart} 
+                    />
+                ))
             ) : (
                 <div className="text-center text-sm text-brand-grey py-8">
                     <p>No projects in this stage.</p>
@@ -93,6 +116,7 @@ const PipelineColumn: React.FC<{
 const PipelinePage = () => {
     const { user, updateProjectStatus } = useAuth();
     const projects = user?.pipelineProjects || [];
+    const strategies = user?.strategies || [];
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -190,6 +214,7 @@ const PipelinePage = () => {
                                 title={col.title}
                                 projects={projectsByStatus[col.title]}
                                 color={col.color}
+                                strategies={strategies}
                                 onDragStart={handleDragStart}
                                 onDrop={handleDrop}
                             />

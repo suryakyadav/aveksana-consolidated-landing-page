@@ -34,6 +34,7 @@ const LoginPage = () => {
           createdAt: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
           updatedAt: new Date(Date.now() - 3600000).toISOString(),
           isShared: true,
+          status: 'draft',
           sharedWith: [
               { name: 'Sarah Chen', role: 'VP Engineering' },
               { name: 'Michael Ross', role: 'Product Lead' }
@@ -64,6 +65,32 @@ const LoginPage = () => {
                   timestamp: '1 day ago'
               }
           ],
+          priorities: [
+            {
+                id: 'p1',
+                title: 'Automated Testing Pipeline',
+                description: 'Implement a fully automated CI/CD testing suite to catch bugs earlier.',
+                horizon: '12 months',
+                strategicPillar: 'Operational Efficiency',
+                status: 'published'
+            },
+            {
+                id: 'p2',
+                title: 'Microservices Decoupling',
+                description: 'Break down the monolithic core into independent services to speed up deployment.',
+                horizon: '18-24 months',
+                strategicPillar: 'Architecture Modernization',
+                status: 'draft'
+            },
+             {
+                id: 'p3',
+                title: 'AI-Driven QA',
+                description: 'Integrate AI tools to predict potential failure points before code merge.',
+                horizon: '24 months',
+                strategicPillar: 'Innovation',
+                status: 'published'
+            }
+          ],
           implementation: [
             {
                 id: 'task-1',
@@ -71,7 +98,9 @@ const LoginPage = () => {
                 description: 'Conduct a comprehensive review of recent advancements in quantum sensor technology for biological applications.',
                 suggestedRole: 'Senior Researcher',
                 assignee: 'Dr. Alex Riley', // Matches the login user
-                status: 'pending'
+                status: 'pending',
+                relatedPriorityId: 'p3',
+                dueDate: '2024-05-15'
             },
             {
                 id: 'task-2',
@@ -79,7 +108,9 @@ const LoginPage = () => {
                 description: 'Build initial prototype based on specifications.',
                 suggestedRole: 'Engineer',
                 assignee: 'Sarah Chen',
-                status: 'in_progress'
+                status: 'in_progress',
+                relatedPriorityId: 'p2',
+                dueDate: '2024-06-01'
             }
           ]
       };

@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import type { User, GeneratedIdea, PipelineProject, PipelineStatus, Activity, StrategicPlan } from '../types';
+import type { User, GeneratedIdea, PipelineProject, PipelineStatus, Activity, StrategicPlan, ImplementationItem } from '../types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -10,6 +10,7 @@ interface AuthContextType {
   updateSavedIdeas: (ideas: GeneratedIdea[]) => void;
   updatePipelineProjects: (projects: PipelineProject[]) => void;
   promoteIdeaToPipeline: (idea: GeneratedIdea) => void;
+  promoteTaskToProject: (strategyId: string, task: ImplementationItem) => void;
   updateProjectStatus: (projectTitle: string, newStatus: PipelineStatus) => void;
   updateProjectDetails: (projectTitle: string, details: Partial<PipelineProject>) => void;
   addActivity: (activity: Omit<Activity, 'timestamp'>) => void;
@@ -72,6 +73,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             pipelineProjects: newPipelineProjects
         };
       });
+  };
+
+  const promoteTaskToProject = (strategyId: string, task: ImplementationItem) => {
+    setUser(currentUser => {
+        if (!currentUser || !currentUser.strategies) return currentUser;
+
+        // 1. Create the new project
+        const newProject: PipelineProject = {
+            title: task.title,
+            overview: task.description,
+            gapScore: 0, // Not calculated yet
+            literature: [],
+            priority: 'Medium',
+            status: 'Ideation',
+            relatedStrategyId: strategyId,
+            relatedPriorityId: task.relatedPriorityId
+        };
+        const newPipelineProjects = [...(currentUser.pipelineProjects || []), newProject];
+
+        // 2. Update the strategy task to link to the new project
+        const newStrategies = currentUser.strategies.map(s => {
+            if (s.id === strategyId && s.implementation) {
+                return {
+                    ...s,
+                    implementation: s.implementation.map(t => 
+                        t.id === task.id ? { ...t, relatedProjectId: task.title } : t
+                    )
+                };
+            }
+            return s;
+        });
+
+        // 3. Add activity
+        const newActivity: Activity = {
+            type: 'project_access',
+            title: task.title,
+            link: `/dashboard/project/${encodeURIComponent(task.title)}`,
+            timestamp: new Date().toISOString()
+        };
+        const updatedActivity = [newActivity, ...(currentUser.recentActivity || [])].slice(0, 5);
+
+        return {
+            ...currentUser,
+            pipelineProjects: newPipelineProjects,
+            strategies: newStrategies,
+            recentActivity: updatedActivity
+        };
+    });
   };
 
   const updateProjectStatus = (projectTitle: string, newStatus: PipelineStatus) => {
@@ -151,7 +200,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateSavedIdeas, updatePipelineProjects, promoteIdeaToPipeline, updateProjectStatus, updateProjectDetails, addActivity, saveStrategy, updateStrategy, deleteStrategy }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateSavedIdeas, updatePipelineProjects, promoteIdeaToPipeline, promoteTaskToProject, updateProjectStatus, updateProjectDetails, addActivity, saveStrategy, updateStrategy, deleteStrategy }}>
       {children}
     </AuthContext.Provider>
   );

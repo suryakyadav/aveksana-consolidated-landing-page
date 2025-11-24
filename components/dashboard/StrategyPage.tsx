@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { generateProblemStatement, generateTeamCritique, generateImplementationPlan } from '../../services/geminiService';
-import { Link } from 'react-router-dom';
-import type { ProblemStatement, StrategicPlan, ChatMessage, ImplementationItem } from '../../types';
-import { ChatBubbleLeftRightIcon, PaperAirplaneIcon, UsersIcon, PlusIcon, TrashIcon, LockClosedIcon, DocumentIcon, TargetIcon, UserGroupIcon, ClockIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon, UserPlusIcon } from '../icons';
+import { generateProblemStatement, generateTeamCritique, generateImplementationPlan, generateStrategicPriorities } from '../../services/geminiService';
+import { Link, useNavigate } from 'react-router-dom';
+import type { ProblemStatement, StrategicPlan, ChatMessage, ImplementationItem, PriorityItem } from '../../types';
+import { ChatBubbleLeftRightIcon, PaperAirplaneIcon, UsersIcon, PlusIcon, TrashIcon, LockClosedIcon, DocumentIcon, TargetIcon, UserGroupIcon, ClockIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon, UserPlusIcon, FlagIcon, PresentationChartLineIcon, MegaphoneIcon, AdjustmentsIcon, CalendarIcon, RDPortalIcon } from '../icons';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Mock Researchers for Assignment
@@ -15,13 +15,120 @@ const RESEARCHERS = [
     { id: 'r5', name: 'Dr. Olivia Green', role: 'Quantum Physicist' },
 ];
 
+const PriorityEditorModal = ({ isOpen, onClose, priority, onSave }: { isOpen: boolean, onClose: () => void, priority: PriorityItem | null, onSave: (p: PriorityItem) => void }) => {
+    const [formData, setFormData] = useState<PriorityItem>({
+        id: '',
+        title: '',
+        description: '',
+        horizon: '',
+        strategicPillar: '',
+        status: 'draft'
+    });
+
+    useEffect(() => {
+        if (priority) {
+            setFormData(priority);
+        } else {
+            setFormData({
+                id: '',
+                title: '',
+                description: '',
+                horizon: '',
+                strategicPillar: '',
+                status: 'draft'
+            });
+        }
+    }, [priority, isOpen]);
+
+    if (!isOpen) return null;
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+                <div className="p-6 border-b border-brand-light-grey flex justify-between items-center">
+                    <h3 className="font-bold text-xl text-brand-dark-teal">{priority ? 'Edit Priority' : 'Add New Priority'}</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-brand-dark-grey mb-1">Title</label>
+                        <input 
+                            type="text" 
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-medium-teal outline-none"
+                            value={formData.title}
+                            onChange={e => setFormData({...formData, title: e.target.value})}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-brand-dark-grey mb-1">Description</label>
+                        <textarea 
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-medium-teal outline-none min-h-[80px]"
+                            value={formData.description}
+                            onChange={e => setFormData({...formData, description: e.target.value})}
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-brand-dark-grey mb-1">Horizon</label>
+                            <input 
+                                type="text" 
+                                required
+                                placeholder="e.g. 12 months"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-medium-teal outline-none"
+                                value={formData.horizon}
+                                onChange={e => setFormData({...formData, horizon: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-brand-dark-grey mb-1">Strategic Pillar</label>
+                            <input 
+                                type="text" 
+                                required
+                                placeholder="e.g. Innovation"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-medium-teal outline-none"
+                                value={formData.strategicPillar}
+                                onChange={e => setFormData({...formData, strategicPillar: e.target.value})}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                         <label className="block text-sm font-medium text-brand-dark-grey mb-1">Status</label>
+                         <select 
+                            value={formData.status}
+                            onChange={e => setFormData({...formData, status: e.target.value as 'draft' | 'published'})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-medium-teal outline-none"
+                         >
+                             <option value="draft">Draft</option>
+                             <option value="published">Published</option>
+                         </select>
+                    </div>
+                    <div className="pt-4 flex justify-end gap-3">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-brand-dark-grey hover:bg-gray-100 rounded-md">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-brand-medium-teal text-white rounded-md hover:bg-brand-teal font-semibold">Save Priority</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+
 const StrategyPage = () => {
-  const { user, saveStrategy, updateStrategy, deleteStrategy } = useAuth();
+  const { user, saveStrategy, updateStrategy, deleteStrategy, promoteTaskToProject } = useAuth();
   const strategies = user?.strategies || [];
+  const navigate = useNavigate();
   
   // State for the active view
   const [viewMode, setViewMode] = useState<'list' | 'editor'>('list');
-  const [activeTab, setActiveTab] = useState<'definition' | 'implementation'>('definition');
+  const [activeTab, setActiveTab] = useState<'definition' | 'priorities' | 'implementation'>('definition');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
   // Form State
@@ -35,7 +142,14 @@ const StrategyPage = () => {
     evaluationCriteria: '',
     stakeholders: '',
   });
+  const [status, setStatus] = useState<'draft' | 'published'>('draft');
   
+  // Priorities State
+  const [priorities, setPriorities] = useState<PriorityItem[]>([]);
+  const [isPrioritiesLoading, setIsPrioritiesLoading] = useState(false);
+  const [editingPriority, setEditingPriority] = useState<PriorityItem | null>(null);
+  const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
+
   // Implementation Plan State
   const [implementationPlan, setImplementationPlan] = useState<ImplementationItem[]>([]);
   const [isPlanLoading, setIsPlanLoading] = useState(false);
@@ -66,7 +180,9 @@ const StrategyPage = () => {
                 setIsShared(strat.isShared);
                 setSharedWith(strat.sharedWith);
                 setComments(strat.discussion);
+                setPriorities(strat.priorities || []);
                 setImplementationPlan(strat.implementation || []);
+                setStatus(strat.status || 'draft');
                 setDescription(''); // Clear description on load
                 setError(null);
                 setIsSaved(true);
@@ -85,6 +201,7 @@ const StrategyPage = () => {
         evaluationCriteria: '',
         stakeholders: '',
       });
+      setPriorities([]);
       setImplementationPlan([]);
       setDescription('');
       setIsShared(false);
@@ -92,6 +209,7 @@ const StrategyPage = () => {
       setComments([]);
       setIsSaved(false);
       setError(null);
+      setStatus('draft');
       setActiveTab('definition');
   };
 
@@ -135,7 +253,9 @@ const StrategyPage = () => {
               isShared,
               sharedWith,
               discussion: comments,
-              implementation: implementationPlan
+              priorities,
+              implementation: implementationPlan,
+              status
           };
           saveStrategy(newStrategy);
           setSelectedId(newId);
@@ -146,11 +266,55 @@ const StrategyPage = () => {
               isShared,
               sharedWith,
               discussion: comments,
-              implementation: implementationPlan
+              priorities,
+              implementation: implementationPlan,
+              status
           });
       }
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
+  };
+
+  const isDefinitionComplete = () => {
+      return !!(statement?.coreProblem && statement?.desiredOutcomes && statement.coreProblem.length > 5);
+  };
+
+  const handlePublish = () => {
+    if (!isDefinitionComplete()) {
+        setError("You cannot publish an incomplete strategy. Please fill out the 'The Core Problem' and 'Desired Outcomes' fields in the Strategy Definition tab.");
+        window.scrollTo(0, 0);
+        return;
+    }
+    
+    if (window.confirm("Are you sure you want to publish this strategy? This will make it the official direction for the team and share it with relevant stakeholders.")) {
+        setStatus('published');
+        // Update immediately if it exists
+        if (selectedId && selectedId !== 'new') {
+            updateStrategy(selectedId, { status: 'published', isShared: true });
+            setIsShared(true);
+        } else {
+             // Save new as published
+             const now = new Date().toISOString();
+             const newId = `strat-${Date.now()}`;
+             const newStrategy: StrategicPlan = {
+                  id: newId,
+                  title: title || 'Untitled Strategy',
+                  createdAt: now,
+                  updatedAt: now,
+                  statement,
+                  isShared: true,
+                  sharedWith,
+                  discussion: comments,
+                  priorities,
+                  implementation: implementationPlan,
+                  status: 'published'
+              };
+              saveStrategy(newStrategy);
+              setSelectedId(newId);
+              setIsShared(true);
+        }
+        alert("Strategy Published Successfully!");
+    }
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
@@ -228,10 +392,79 @@ const StrategyPage = () => {
     }
   };
 
+  const handleGeneratePriorities = async () => {
+    if (!isDefinitionComplete()) {
+        setError("Please complete the Problem Statement in the 'Strategy Definition' tab first. The AI needs this context to generate priorities.");
+        window.scrollTo(0, 0);
+        return;
+    }
+    
+    setIsPrioritiesLoading(true);
+    setError(null);
+    try {
+        const generatedPriorities = await generateStrategicPriorities(statement);
+        setPriorities(generatedPriorities);
+        setIsSaved(false);
+        if (selectedId !== 'new' && selectedId) {
+             updateStrategy(selectedId, { priorities: generatedPriorities });
+             setIsSaved(true);
+        }
+    } catch (err) {
+        console.error(err);
+        setError("Failed to generate strategic priorities.");
+    } finally {
+        setIsPrioritiesLoading(false);
+    }
+  };
+
+  const handleSavePriority = (priority: PriorityItem) => {
+      let updatedList;
+      if (priority.id) {
+          updatedList = priorities.map(p => p.id === priority.id ? priority : p);
+      } else {
+          updatedList = [...priorities, { ...priority, id: `p-${Date.now()}` }];
+      }
+      setPriorities(updatedList);
+      setIsSaved(false);
+      if (selectedId !== 'new' && selectedId) {
+          updateStrategy(selectedId, { priorities: updatedList });
+          setIsSaved(true);
+      }
+  };
+
+  const handleAddPriority = () => {
+      setEditingPriority(null);
+      setIsPriorityModalOpen(true);
+  };
+
+  const handleEditPriority = (priority: PriorityItem) => {
+      setEditingPriority(priority);
+      setIsPriorityModalOpen(true);
+  };
+
+  const handlePublishPriorities = () => {
+      if (window.confirm("Publish all pending priorities?")) {
+          const updatedList = priorities.map(p => ({ ...p, status: 'published' as const }));
+          setPriorities(updatedList);
+          setIsSaved(false);
+          if (selectedId !== 'new' && selectedId) {
+            updateStrategy(selectedId, { priorities: updatedList });
+            setIsSaved(true);
+          }
+      }
+  };
+
   const handleGeneratePlan = async () => {
+      if (!isDefinitionComplete()) {
+        setError("Please complete the Problem Statement first.");
+        window.scrollTo(0, 0);
+        return;
+      }
+
       setIsPlanLoading(true);
+      setError(null);
       try {
-          const plan = await generateImplementationPlan(statement);
+          const plan = await generateImplementationPlan(statement, priorities);
           setImplementationPlan(plan);
           setIsSaved(false);
           // Auto-save the plan
@@ -258,6 +491,31 @@ const StrategyPage = () => {
       }
   };
 
+  const handleDueDateChange = (taskId: string, date: string) => {
+    const updatedPlan = implementationPlan.map(item =>
+        item.id === taskId ? { ...item, dueDate: date } : item
+    );
+    setImplementationPlan(updatedPlan);
+    setIsSaved(false);
+    if (selectedId !== 'new' && selectedId) {
+        updateStrategy(selectedId, { implementation: updatedPlan });
+    }
+  };
+
+  const handlePromoteToPipeline = (task: ImplementationItem) => {
+    if (!selectedId || selectedId === 'new') {
+        alert("Please save the strategy first.");
+        return;
+    }
+    if (task.relatedProjectId) {
+        navigate(`/dashboard/project/${encodeURIComponent(task.relatedProjectId)}`);
+    } else {
+        if (window.confirm(`Are you sure you want to promote "${task.title}" to a pipeline project?`)) {
+            promoteTaskToProject(selectedId, task);
+        }
+    }
+  };
+
   const handleCreateNew = () => {
       setSelectedId('new');
       setViewMode('editor');
@@ -272,6 +530,30 @@ const StrategyPage = () => {
       setViewMode('list');
       setSelectedId(null);
   };
+
+  // Group Priorities by Theme
+  const groupedPriorities = priorities.reduce((acc, priority) => {
+      const theme = priority.strategicPillar || 'Other';
+      if (!acc[theme]) acc[theme] = [];
+      acc[theme].push(priority);
+      return acc;
+  }, {} as Record<string, PriorityItem[]>);
+
+  // Group Tasks by Priority
+  const groupedTasks = implementationPlan.reduce((acc, task) => {
+      let key = 'General / Uncategorized';
+      if (task.relatedPriorityId) {
+          const priority = priorities.find(p => p.id === task.relatedPriorityId);
+          if (priority) {
+              key = priority.title;
+          }
+      }
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(task);
+      return acc;
+  }, {} as Record<string, ImplementationItem[]>);
+
+  const hasDraftPriorities = priorities.some(p => p.status === 'draft');
 
   const inputClasses = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-medium-teal focus:border-transparent outline-none transition bg-white min-h-[120px]";
 
@@ -341,8 +623,19 @@ const StrategyPage = () => {
                                     className="bg-white rounded-xl shadow-sm border border-brand-light-grey p-6 cursor-pointer hover:shadow-md hover:border-brand-medium-teal transition-all relative group"
                                 >
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="bg-brand-light-gray-blue text-brand-dark-teal p-2 rounded-lg">
-                                            <TargetIcon />
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-brand-light-gray-blue text-brand-dark-teal p-2 rounded-lg">
+                                                <TargetIcon />
+                                            </div>
+                                            {strat.status === 'published' ? (
+                                                <span className="flex items-center gap-1 text-xs font-bold text-white bg-green-600 px-2 py-1 rounded-full">
+                                                    Published
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                                    Draft
+                                                </span>
+                                            )}
                                         </div>
                                         {strat.isShared ? (
                                             <span className="flex items-center gap-1 text-xs font-bold text-brand-medium-teal bg-brand-light-gray-blue px-2 py-1 rounded-full">
@@ -385,6 +678,12 @@ const StrategyPage = () => {
   // EDITOR VIEW
   return (
     <main className="py-12 bg-brand-light-gray-blue min-h-[calc(100vh-200px)]">
+      <PriorityEditorModal 
+        isOpen={isPriorityModalOpen} 
+        onClose={() => setIsPriorityModalOpen(false)} 
+        priority={editingPriority} 
+        onSave={handleSavePriority} 
+      />
       <div className="container mx-auto px-6 max-w-7xl">
         <header className="mb-6">
             <button onClick={handleBack} className="flex items-center gap-2 text-brand-grey hover:text-brand-medium-teal transition-colors font-semibold mb-4">
@@ -396,13 +695,20 @@ const StrategyPage = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-brand-light-grey flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-8">
             <div className="flex-grow w-full md:w-auto">
                 <label className="block text-xs font-bold text-brand-grey uppercase tracking-wider mb-1">Strategy Title</label>
-                <input 
-                    type="text" 
-                    value={title}
-                    onChange={(e) => { setTitle(e.target.value); setIsSaved(false); }}
-                    className="w-full text-3xl font-bold text-brand-dark-teal border-b border-transparent focus:border-brand-medium-teal focus:outline-none hover:border-gray-200 transition-colors bg-transparent placeholder-gray-300"
-                    placeholder="Untitled Strategy"
-                />
+                <div className="flex items-center gap-3">
+                    <input 
+                        type="text" 
+                        value={title}
+                        onChange={(e) => { setTitle(e.target.value); setIsSaved(false); }}
+                        className="w-full text-3xl font-bold text-brand-dark-teal border-b border-transparent focus:border-brand-medium-teal focus:outline-none hover:border-gray-200 transition-colors bg-transparent placeholder-gray-300"
+                        placeholder="Untitled Strategy"
+                    />
+                     {status === 'published' && (
+                        <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold text-white bg-green-600 px-3 py-1 rounded-full uppercase tracking-wide">
+                            Published
+                        </span>
+                    )}
+                </div>
             </div>
             <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                 {isShared ? (
@@ -413,6 +719,14 @@ const StrategyPage = () => {
                     <span className="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                         <LockClosedIcon /> Private
                     </span>
+                )}
+                 {(user?.role === 'admin' || user?.role === 'team_lead') && status !== 'published' && (
+                    <button
+                        onClick={handlePublish}
+                        className="px-4 py-2 rounded-lg font-semibold shadow-sm transition-all bg-brand-seafoam text-brand-dark-teal hover:opacity-90 flex items-center gap-2"
+                    >
+                        <MegaphoneIcon /> Publish
+                    </button>
                 )}
                 <button 
                     onClick={handleSave}
@@ -434,6 +748,16 @@ const StrategyPage = () => {
                 }`}
             >
                 <TargetIcon /> Strategy Definition
+            </button>
+            <button
+                onClick={() => setActiveTab('priorities')}
+                className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 whitespace-nowrap ${
+                    activeTab === 'priorities'
+                        ? 'border-brand-medium-teal text-brand-medium-teal'
+                        : 'border-transparent text-gray-500 hover:text-brand-dark-teal'
+                }`}
+            >
+                <FlagIcon /> Long-Term Priorities
             </button>
             <button
                 onClick={() => setActiveTab('implementation')}
@@ -471,6 +795,13 @@ const StrategyPage = () => {
                 </form>
             </div>
         )}
+        
+        {/* Global Error Message */}
+        {error && (
+             <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg border border-red-200">
+                {error}
+             </div>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             
@@ -507,6 +838,110 @@ const StrategyPage = () => {
                     </div>
                 )}
 
+                {activeTab === 'priorities' && (
+                    <div className="bg-white p-8 rounded-xl shadow-lg border border-brand-light-grey">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-brand-light-grey pb-4">
+                             <div className="flex items-center gap-2">
+                                <FlagIcon />
+                                <h2 className="text-xl font-bold text-brand-dark-teal">Strategic Horizon (12-24 Months)</h2>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                 {hasDraftPriorities && (
+                                     <button
+                                        onClick={handlePublishPriorities}
+                                        className="bg-brand-seafoam text-brand-dark-teal font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition-colors text-sm flex items-center gap-2"
+                                    >
+                                        <MegaphoneIcon /> Publish Priorities
+                                    </button>
+                                 )}
+                                <button
+                                    onClick={handleAddPriority}
+                                    className="bg-white border border-brand-light-grey text-brand-dark-teal font-semibold px-4 py-2 rounded-lg hover:border-brand-medium-teal transition-colors text-sm flex items-center gap-2"
+                                >
+                                    <PlusIcon /> Add Priority
+                                </button>
+                                {(user?.role === 'admin' || user?.role === 'team_lead') && isDefinitionComplete() && (
+                                    <button
+                                        onClick={handleGeneratePriorities}
+                                        disabled={isPrioritiesLoading}
+                                        className="bg-brand-light-gray-blue text-brand-medium-teal font-semibold px-4 py-2 rounded-lg hover:bg-brand-medium-teal hover:text-white transition-colors disabled:opacity-50 text-sm"
+                                    >
+                                        {isPrioritiesLoading ? 'Generating...' : priorities.length > 0 ? 'Regenerate AI' : 'Generate with AI'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        
+                        {!isDefinitionComplete() ? (
+                             <div className="text-center py-16 text-brand-dark-grey bg-brand-light-gray-blue/20 rounded-lg border-2 border-dashed border-brand-light-grey">
+                                <h3 className="font-bold text-lg mb-2 text-red-600">Strategy Definition Required</h3>
+                                <p className="mb-6 max-w-md mx-auto">
+                                    You must complete the Problem Statement in the 'Strategy Definition' tab before you can generate long-term priorities.
+                                </p>
+                                <button
+                                    onClick={() => setActiveTab('definition')}
+                                    className="bg-brand-medium-teal text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-colors"
+                                >
+                                    Go to Definition
+                                </button>
+                            </div>
+                        ) : priorities.length === 0 ? (
+                            <div className="text-center py-16 text-brand-dark-grey bg-brand-light-gray-blue/20 rounded-lg border-2 border-dashed border-brand-light-grey">
+                                <h3 className="font-bold text-lg mb-2">No Strategic Priorities Defined</h3>
+                                <p className="mb-6 max-w-md mx-auto">
+                                    Define the long-term focus areas for your team to ensure alignment on 12-24 month goals.
+                                </p>
+                                <div className="flex justify-center gap-4">
+                                     <button
+                                        onClick={handleAddPriority}
+                                        className="bg-white border border-brand-grey text-brand-dark-grey font-semibold px-6 py-3 rounded-lg hover:border-brand-dark-teal transition-colors"
+                                    >
+                                        Add Manually
+                                    </button>
+                                    <button
+                                        onClick={handleGeneratePriorities}
+                                        disabled={isPrioritiesLoading}
+                                        className="bg-brand-medium-teal text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-colors disabled:bg-gray-400"
+                                    >
+                                        {isPrioritiesLoading ? 'Thinking...' : 'Generate with AI'}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-8">
+                                {Object.entries(groupedPriorities).map(([pillar, items]) => (
+                                    <div key={pillar}>
+                                        <h3 className="text-md font-bold text-brand-grey uppercase tracking-wider mb-4 border-b border-brand-light-grey pb-2">{pillar}</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {items.map((priority) => (
+                                                <div key={priority.id} className="bg-brand-off-white border border-brand-light-grey rounded-lg p-5 hover:border-brand-medium-teal transition-all flex flex-col relative group">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${priority.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                                                            {priority.status === 'published' ? 'Published' : 'Draft'}
+                                                        </span>
+                                                        <span className="text-xs bg-brand-light-gray-blue text-brand-dark-teal px-2 py-1 rounded-full font-semibold">{priority.horizon}</span>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold text-brand-dark-teal mb-2">{priority.title}</h3>
+                                                    <p className="text-sm text-brand-dark-grey flex-grow">{priority.description}</p>
+                                                    
+                                                    <div className="mt-4 pt-4 border-t border-brand-light-grey flex justify-end">
+                                                         <button 
+                                                            onClick={() => handleEditPriority(priority)}
+                                                            className="text-xs font-bold text-brand-medium-teal hover:underline flex items-center gap-1"
+                                                         >
+                                                             <AdjustmentsIcon /> Edit
+                                                         </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {activeTab === 'implementation' && (
                     <div className="bg-white p-8 rounded-xl shadow-lg border border-brand-light-grey">
                         <div className="flex items-center justify-between gap-2 mb-6 border-b border-brand-light-grey pb-4">
@@ -514,7 +949,7 @@ const StrategyPage = () => {
                                 <ClipboardDocumentCheckIcon />
                                 <h2 className="text-xl font-bold text-brand-dark-teal">Implementation Plan</h2>
                             </div>
-                            {(user?.role === 'admin' || user?.role === 'team_lead') && (
+                            {(user?.role === 'admin' || user?.role === 'team_lead') && isDefinitionComplete() && (
                                 <button
                                     onClick={handleGeneratePlan}
                                     disabled={isPlanLoading}
@@ -525,11 +960,24 @@ const StrategyPage = () => {
                             )}
                         </div>
 
-                        {implementationPlan.length === 0 ? (
+                         {!isDefinitionComplete() ? (
+                             <div className="text-center py-16 text-brand-dark-grey bg-brand-light-gray-blue/20 rounded-lg border-2 border-dashed border-brand-light-grey">
+                                <h3 className="font-bold text-lg mb-2 text-red-600">Strategy Definition Required</h3>
+                                <p className="mb-6 max-w-md mx-auto">
+                                    You must complete the Problem Statement in the 'Strategy Definition' tab before you can generate the implementation plan.
+                                </p>
+                                <button
+                                    onClick={() => setActiveTab('definition')}
+                                    className="bg-brand-medium-teal text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-colors"
+                                >
+                                    Go to Definition
+                                </button>
+                            </div>
+                        ) : implementationPlan.length === 0 ? (
                             <div className="text-center py-16 text-brand-dark-grey bg-brand-light-gray-blue/20 rounded-lg border-2 border-dashed border-brand-light-grey">
                                 <h3 className="font-bold text-lg mb-2">No Plan Created Yet</h3>
                                 <p className="mb-6 max-w-md mx-auto">
-                                    Use AI to break down your problem statement into actionable tasks and assign them to your team.
+                                    Use AI to break down your problem statement into actionable tasks, linked to your strategic priorities.
                                 </p>
                                 <button
                                     onClick={handleGeneratePlan}
@@ -540,62 +988,112 @@ const StrategyPage = () => {
                                 </button>
                             </div>
                         ) : (
-                            <div className="space-y-6">
-                                {implementationPlan.map((item) => (
-                                    <div key={item.id} className="bg-brand-off-white border border-brand-light-grey rounded-lg p-5 hover:border-brand-medium-teal transition-all">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h3 className="text-lg font-bold text-brand-dark-teal">{item.title}</h3>
-                                            <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase ${item.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-200 text-gray-600'}`}>
-                                                {item.status === 'in_progress' ? 'In Progress' : 'Pending'}
-                                            </span>
+                            <div className="space-y-12">
+                                {Object.entries(groupedTasks).map(([priorityGroup, tasks]) => (
+                                    <div key={priorityGroup}>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <FlagIcon />
+                                            <h3 className="text-lg font-bold text-brand-dark-teal">{priorityGroup}</h3>
                                         </div>
-                                        <p className="text-sm text-brand-dark-grey mb-4">{item.description}</p>
-                                        
-                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-brand-light-grey gap-4">
-                                            <div className="text-xs text-brand-grey flex items-center gap-2">
-                                                <span className="font-semibold text-brand-dark-teal">Suggested Role:</span> {item.suggestedRole}
-                                            </div>
-                                            
-                                            {(user?.role === 'admin' || user?.role === 'team_lead') ? (
-                                                <div className="relative group">
-                                                    {item.assignee ? (
-                                                        <div className="flex items-center gap-2 bg-white border border-brand-light-grey rounded-full pl-1 pr-3 py-1 shadow-sm">
-                                                            <div className="h-6 w-6 rounded-full bg-brand-medium-teal text-white flex items-center justify-center text-xs font-bold">
-                                                                {item.assignee.charAt(0)}
+                                        <div className="grid grid-cols-1 gap-6">
+                                            {tasks.map((item) => (
+                                                <div key={item.id} className="bg-brand-off-white border border-brand-light-grey rounded-lg p-5 hover:border-brand-medium-teal transition-all shadow-sm">
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <h3 className="text-lg font-bold text-brand-dark-teal">{item.title}</h3>
+                                                        <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${item.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : item.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                                                            {item.status === 'in_progress' ? 'In Progress' : item.status === 'completed' ? 'Completed' : 'Pending'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-brand-dark-grey mb-4 leading-relaxed">{item.description}</p>
+                                                    
+                                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center pt-4 border-t border-brand-light-grey gap-6">
+                                                        {/* Role & Assignee */}
+                                                        <div className="flex flex-col gap-2">
+                                                            <div className="text-xs text-brand-grey flex items-center gap-2">
+                                                                <span className="font-semibold text-brand-dark-teal">Suggested Role:</span> {item.suggestedRole}
                                                             </div>
-                                                            <span className="text-sm font-semibold text-brand-dark-grey">{item.assignee}</span>
-                                                            <button onClick={() => handleAssign(item.id, '')} className="text-gray-400 hover:text-red-500 ml-1">&times;</button>
+                                                            {(user?.role === 'admin' || user?.role === 'team_lead') ? (
+                                                                <div className="relative group">
+                                                                    {item.assignee ? (
+                                                                        <div className="flex items-center gap-2 bg-white border border-brand-light-grey rounded-full pl-1 pr-3 py-1 shadow-sm">
+                                                                            <div className="h-6 w-6 rounded-full bg-brand-medium-teal text-white flex items-center justify-center text-xs font-bold">
+                                                                                {item.assignee.charAt(0)}
+                                                                            </div>
+                                                                            <span className="text-sm font-semibold text-brand-dark-grey">{item.assignee}</span>
+                                                                            <button onClick={() => handleAssign(item.id, '')} className="text-gray-400 hover:text-red-500 ml-1">&times;</button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="relative">
+                                                                             <select 
+                                                                                onChange={(e) => {
+                                                                                    if (e.target.value) handleAssign(item.id, e.target.value);
+                                                                                }}
+                                                                                value=""
+                                                                                className="appearance-none bg-white border border-brand-light-grey text-brand-medium-teal text-sm font-semibold py-1.5 pl-3 pr-8 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-medium-teal hover:border-brand-medium-teal"
+                                                                             >
+                                                                                <option value="" disabled>Assign to...</option>
+                                                                                {RESEARCHERS.map(r => (
+                                                                                    <option key={r.id} value={r.name}>{r.name} ({r.role})</option>
+                                                                                ))}
+                                                                             </select>
+                                                                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-medium-teal">
+                                                                                <UserPlusIcon />
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                 item.assignee ? (
+                                                                     <div className="flex items-center gap-2">
+                                                                        <span className="text-xs text-brand-grey">Assigned to:</span>
+                                                                        <span className="text-sm font-semibold text-brand-dark-teal">{item.assignee}</span>
+                                                                     </div>
+                                                                 ) : (
+                                                                     <span className="text-xs text-brand-grey italic">Unassigned</span>
+                                                                 )
+                                                            )}
                                                         </div>
-                                                    ) : (
-                                                        <div className="relative">
-                                                             <select 
-                                                                onChange={(e) => {
-                                                                    if (e.target.value) handleAssign(item.id, e.target.value);
-                                                                }}
-                                                                value=""
-                                                                className="appearance-none bg-white border border-brand-light-grey text-brand-medium-teal text-sm font-semibold py-1.5 pl-3 pr-8 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-medium-teal hover:border-brand-medium-teal"
-                                                             >
-                                                                <option value="" disabled>Assign to...</option>
-                                                                {RESEARCHERS.map(r => (
-                                                                    <option key={r.id} value={r.name}>{r.name} ({r.role})</option>
-                                                                ))}
-                                                             </select>
-                                                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-brand-medium-teal">
-                                                                <UserPlusIcon />
+
+                                                        {/* Due Date & Promote Actions */}
+                                                        <div className="flex items-center gap-6">
+                                                            <div className="flex items-center gap-2">
+                                                                <CalendarIcon />
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] font-bold text-brand-grey uppercase">Due Date</span>
+                                                                    {(user?.role === 'admin' || user?.role === 'team_lead') ? (
+                                                                        <input 
+                                                                            type="date" 
+                                                                            value={item.dueDate || ''}
+                                                                            onChange={(e) => handleDueDateChange(item.id, e.target.value)}
+                                                                            className="text-sm font-semibold text-brand-dark-teal bg-transparent border-b border-transparent hover:border-brand-light-grey focus:border-brand-medium-teal outline-none transition-colors"
+                                                                        />
+                                                                    ) : (
+                                                                        <span className="text-sm font-semibold text-brand-dark-teal">{item.dueDate || 'Not Set'}</span>
+                                                                    )}
+                                                                </div>
                                                             </div>
+                                                            
+                                                            {(user?.role === 'admin' || user?.role === 'team_lead') && (
+                                                                item.relatedProjectId ? (
+                                                                    <button
+                                                                        onClick={() => handlePromoteToPipeline(item)}
+                                                                        className="flex items-center gap-2 text-sm font-bold text-brand-medium-teal hover:text-brand-dark-teal transition-colors bg-brand-light-gray-blue px-3 py-1.5 rounded-full"
+                                                                    >
+                                                                        <RDPortalIcon /> View Project
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handlePromoteToPipeline(item)}
+                                                                        className="flex items-center gap-2 text-sm font-bold text-brand-dark-grey hover:text-brand-medium-teal transition-colors border border-brand-light-grey hover:border-brand-medium-teal px-3 py-1.5 rounded-full"
+                                                                    >
+                                                                        <PlusIcon /> Promote to Pipeline
+                                                                    </button>
+                                                                )
+                                                            )}
                                                         </div>
-                                                    )}
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                 item.assignee ? (
-                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-brand-grey">Assigned to:</span>
-                                                        <span className="text-sm font-semibold text-brand-dark-teal">{item.assignee}</span>
-                                                     </div>
-                                                 ) : (
-                                                     <span className="text-xs text-brand-grey italic">Unassigned</span>
-                                                 )
-                                            )}
+                                            ))}
                                         </div>
                                     </div>
                                 ))}
@@ -683,7 +1181,7 @@ const StrategyPage = () => {
                                 <div className={`max-w-[85%] rounded-lg p-2 shadow-sm ${comment.isUser ? 'bg-brand-light-gray-blue text-brand-dark-grey' : 'bg-white text-brand-dark-grey border border-brand-light-grey'}`}>
                                     <div className="flex justify-between items-baseline mb-1 gap-2">
                                         <span className="font-bold text-[10px] text-brand-dark-teal">{comment.name}</span>
-                                        <span className="text-[9px] text-gray-500 uppercase">{comment.role}</span>
+                                        <span className="text-xs text-gray-500 uppercase">{comment.role}</span>
                                     </div>
                                     <p className="text-xs">{comment.message}</p>
                                 </div>

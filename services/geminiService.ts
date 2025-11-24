@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import type { GeneratedIdea, LiteratureAnalysis, ExperimentDesign, RedTeamAnalysis, GeneratedProposalSection, ProblemStatement, ImplementationItem } from '../types';
+import type { GeneratedIdea, LiteratureAnalysis, ExperimentDesign, RedTeamAnalysis, GeneratedProposalSection, ProblemStatement, ImplementationItem, PriorityItem } from '../types';
 
 
 export async function generateTopics(baseTopic: string): Promise<string[]> {
@@ -561,21 +561,29 @@ export async function generateTeamCritique(statement: ProblemStatement): Promise
   }
 }
 
-export async function generateImplementationPlan(statement: ProblemStatement): Promise<ImplementationItem[]> {
+export async function generateImplementationPlan(statement: ProblemStatement, priorities: PriorityItem[] = []): Promise<ImplementationItem[]> {
   const apiKey = process.env.API_KEY;
   if (!apiKey) throw new Error("API key is not configured");
 
   const ai = new GoogleGenAI({ apiKey });
-  const prompt = `Based on the following R&D Problem Statement, generate a structured implementation plan.
+  
+  const prioritiesContext = priorities.length > 0
+    ? `Align the tasks with these Strategic Priorities: ${JSON.stringify(priorities.map(p => ({id: p.id, title: p.title, description: p.description})))}`
+    : '';
+
+  const prompt = `Based on the following R&D Problem Statement and Strategic Priorities, generate a structured implementation plan.
   
   Problem Statement:
   ${JSON.stringify(statement)}
+
+  ${prioritiesContext}
 
   Break this down into 5-7 concrete, actionable steps or work packages for an R&D team. 
   For each step, provide:
   1. A clear title.
   2. A brief description of the action.
   3. A suggested specific role (e.g., "Senior Data Scientist", "Materials Engineer", "Product Owner") best suited to lead this task.
+  4. The ID of the Strategic Priority this task most closely supports (from the provided list). If it's a general task or doesn't fit a specific priority, leave as null.
   `;
 
   try {
@@ -595,6 +603,7 @@ export async function generateImplementationPlan(statement: ProblemStatement): P
                   title: { type: Type.STRING },
                   description: { type: Type.STRING },
                   suggestedRole: { type: Type.STRING },
+                  relatedPriorityId: { type: Type.STRING, description: "The ID of the related priority" },
                 },
                 required: ['title', 'description', 'suggestedRole']
               }
@@ -617,5 +626,64 @@ export async function generateImplementationPlan(statement: ProblemStatement): P
   } catch (error) {
     console.error("Error generating implementation plan:", error);
     throw new Error("Failed to generate implementation plan.");
+  }
+}
+
+export async function generateStrategicPriorities(statement: ProblemStatement): Promise<PriorityItem[]> {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("API key is not configured");
+
+  const ai = new GoogleGenAI({ apiKey });
+  const prompt = `Act as an expert R&D strategist. Based on the R&D Problem Statement below, suggest 3-4 long-term strategic priorities (12-24 month horizon) that the team should focus on to solve the core problem and achieve desired outcomes.
+
+  Problem Statement: ${JSON.stringify(statement)}
+
+  For each priority, provide:
+  1. Title: A concise, catchy title.
+  2. Description: A clear explanation of what this entails.
+  3. Horizon: A suggested time horizon (e.g., "12-18 months", "Q4 2025").
+  4. Strategic Pillar: The broader category this falls under (e.g., "Product Innovation", "Operational Efficiency", "Talent Development").
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            priorities: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                  horizon: { type: Type.STRING },
+                  strategicPillar: { type: Type.STRING },
+                },
+                required: ['title', 'description', 'horizon', 'strategicPillar']
+              }
+            }
+          },
+          required: ['priorities']
+        }
+      }
+    });
+
+    const result = JSON.parse(response.text.trim());
+    if (result && Array.isArray(result.priorities)) {
+      return result.priorities.map((item: any, index: number) => ({
+        ...item,
+        id: `priority-${Date.now()}-${index}`,
+        status: 'draft'
+      }));
+    }
+    throw new Error("Invalid response format for strategic priorities.");
+  } catch (error) {
+    console.error("Error generating strategic priorities:", error);
+    throw new Error("Failed to generate strategic priorities.");
   }
 }

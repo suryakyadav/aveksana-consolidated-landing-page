@@ -37,6 +37,8 @@ export interface PipelineProject extends GeneratedIdea {
   marketAnalysis?: string;
   environmentalImpact?: string;
   societalImpact?: string;
+  relatedStrategyId?: string; // Link to the parent Strategy
+  relatedPriorityId?: string; // Link to the specific Strategic Priority
 }
 
 export interface Activity {
@@ -66,6 +68,15 @@ export interface ProblemStatement {
   stakeholders: string;
 }
 
+export interface PriorityItem {
+  id: string;
+  title: string;
+  description: string;
+  horizon: string; // e.g., "12 months", "Q4 2025"
+  strategicPillar: string; // e.g., "Innovation", "Efficiency"
+  status: 'draft' | 'published';
+}
+
 export interface ImplementationItem {
   id: string;
   title: string;
@@ -75,6 +86,8 @@ export interface ImplementationItem {
   assigneeAvatar?: string;
   dueDate?: string;
   status: 'pending' | 'in_progress' | 'completed';
+  relatedPriorityId?: string; // ID of the PriorityItem this task supports
+  relatedProjectId?: string; // ID (title) of the created PipelineProject
 }
 
 export interface StrategicPlan {
@@ -86,7 +99,9 @@ export interface StrategicPlan {
   isShared: boolean;
   sharedWith: { name: string; role: string; avatar?: string }[];
   discussion: ChatMessage[];
+  priorities?: PriorityItem[];
   implementation?: ImplementationItem[];
+  status: 'draft' | 'published';
 }
 
 export interface User {
