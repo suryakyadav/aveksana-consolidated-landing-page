@@ -1,9 +1,12 @@
 
 import axios from 'axios';
 
+// NOTE: This file defines the Axios configuration for a REAL backend integration.
+// Currently, the application is using the mock implementation in `api/auth.ts` to simulate 
+// the backend experience without a running server. 
+// To switch to real API calls, you would import `apiClient` in `api/auth.ts` and use it instead of the mock functions.
+
 // In a real environment, this would come from import.meta.env.VITE_API_URL or process.env
-// For this implementation, we'll use a placeholder base URL. 
-// You should replace this with your actual AWS API Gateway URL.
 const API_URL = 'https://api.aveksana.com/v1'; 
 
 const apiClient = axios.create({

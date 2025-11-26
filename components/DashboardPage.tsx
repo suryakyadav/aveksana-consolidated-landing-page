@@ -1,4 +1,5 @@
 
+
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ThesisIcon, ArthaIcon, RDPortalIcon, UsersIcon, ChartBarIcon, ClipboardListIcon, ShieldCheckIcon, AdjustmentsIcon, TargetIcon, CheckBadgeIcon } from './icons';
@@ -65,7 +66,7 @@ const RecentActivityItem: React.FC<{ activity: Activity }> = ({ activity }) => (
 );
 
 const DashboardPage = () => {
-    const { user } = useAuth();
+    const { user, activeWorkspace, currentRole } = useAuth();
     const recentActivity = user?.recentActivity || [];
 
     useEffect(() => {
@@ -92,8 +93,8 @@ const DashboardPage = () => {
 
         const pipelineFeature = {
             icon: <RDPortalIcon />,
-            title: user?.role === 'researcher' ? 'My R&D Pipeline' : 'Team Innovation Pipeline',
-            description: user?.role === 'researcher' 
+            title: currentRole === 'researcher' ? 'My R&D Pipeline' : 'Team Innovation Pipeline',
+            description: currentRole === 'researcher' 
                 ? 'Visualize your personal innovation pipeline.' 
                 : 'Monitor project status across your team.',
             cta: 'Go to Pipeline',
@@ -116,9 +117,38 @@ const DashboardPage = () => {
             to: '/dashboard/tasks',
         };
 
+        // Student View (or Personal Workspace)
+        if (currentRole === 'student' || !activeWorkspace || activeWorkspace.type === 'Personal') {
+            return [
+                {
+                    icon: <ThesisIcon />,
+                    title: 'Thesis Topic Generator',
+                    description: 'Find a unique, high-impact topic for your thesis in minutes.',
+                    cta: 'Start Generating',
+                    to: '/dashboard/idea-generator'
+                },
+                {
+                    icon: <RDPortalIcon />,
+                    title: 'My Thesis Workspace',
+                    description: 'Organize your research, track literature, and draft your proposal.',
+                    cta: 'Open Workspace',
+                    to: '/dashboard/pipeline'
+                },
+                profileFeature,
+                {
+                    icon: <ArthaIcon />,
+                    title: 'Grant Opportunities',
+                    description: 'Search for PhD funding and travel grants.',
+                    cta: 'Explore Grants',
+                    to: '/dashboard/grants',
+                    badge: 'Pro'
+                }
+            ];
+        }
+
         const baseFeatures = [commonFeatures[0], commonFeatures[1], pipelineFeature, profileFeature];
 
-        if (user?.role === 'admin') {
+        if (currentRole === 'admin') {
             return [
                 ...baseFeatures,
                 {
@@ -148,7 +178,7 @@ const DashboardPage = () => {
             ];
         }
 
-        if (user?.role === 'team_lead') {
+        if (currentRole === 'team_lead') {
              return [
                 ...baseFeatures,
                 {
@@ -170,7 +200,7 @@ const DashboardPage = () => {
             ];
         }
         
-        if (user?.role === 'supervisor') {
+        if (currentRole === 'supervisor') {
              return [
                 ...baseFeatures,
                 {
@@ -185,8 +215,7 @@ const DashboardPage = () => {
         }
 
         // Researcher Role
-        if (user?.role === 'researcher') {
-            // Insert tasks feature at a prominent position
+        if (currentRole === 'researcher') {
             const features = [...baseFeatures];
             features.splice(2, 0, tasksFeature);
             return features;
@@ -203,14 +232,16 @@ const DashboardPage = () => {
         <header className="mb-12 flex justify-between items-end">
             <div>
                 <h1 className="text-4xl font-bold text-brand-dark-teal">
-                    {user?.role === 'admin' ? 'Admin Dashboard' : user?.role === 'team_lead' ? 'Team Lead Dashboard' : 'Researcher Dashboard'}
+                    {activeWorkspace?.name || 'Dashboard'}
                 </h1>
                 <p className="mt-2 text-lg text-brand-dark-grey">
                     Welcome back, {user?.name}. 
-                    {user?.role !== 'researcher' && <span className="ml-1 font-medium text-brand-medium-teal">Viewing as {user?.role.replace('_', ' ')}.</span>}
+                    <span className="ml-1 font-medium text-brand-medium-teal opacity-80">
+                        Viewing as {currentRole.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}
+                    </span>
                 </p>
             </div>
-            {user?.role === 'admin' && (
+            {currentRole === 'admin' && (
                  <span className="hidden md:inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold">System Administrator</span>
             )}
         </header>

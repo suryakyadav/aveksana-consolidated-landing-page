@@ -58,13 +58,16 @@ export const useUser = () => {
     retry: false, // Don't retry if 401
     enabled: !!localStorage.getItem('authToken'), // Only run if token exists
     // Ensure we return a structure compatible with the dashboard even if some fields are missing
-    select: (data: User) => ({
-        ...data,
-        savedIdeas: data.savedIdeas || [],
-        pipelineProjects: data.pipelineProjects || [],
-        strategies: data.strategies || [],
-        recentActivity: data.recentActivity || [],
-        expertise: data.expertise || []
-    })
+    select: (data: User) => {
+        if (!data) return undefined;
+        return {
+            ...data,
+            savedIdeas: data.savedIdeas || [],
+            pipelineProjects: data.pipelineProjects || [],
+            strategies: data.strategies || [],
+            recentActivity: data.recentActivity || [],
+            expertise: data.expertise || []
+        };
+    }
   });
 };

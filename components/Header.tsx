@@ -7,6 +7,7 @@ import { NAV_LINKS } from '../constants';
 import { ChevronDownIcon } from './icons';
 import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
+import WorkspaceSelector from './dashboard/WorkspaceSelector';
 
 const DropdownMenu: React.FC<{ items: NavLink[]; closeDropdown: () => void }> = ({ items, closeDropdown }) => (
   <div className="absolute top-full left-0 mt-2 w-80 bg-brand-off-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
@@ -34,7 +35,7 @@ const Header = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const { openDemoModal } = useModal();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, user, currentRole } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,9 +64,8 @@ const Header = () => {
   }
 
   const handleLogout = () => {
-      logout();
       setIsMobileMenuOpen(false);
-      navigate('/');
+      logout();
   }
 
   return (
@@ -87,9 +87,9 @@ const Header = () => {
                   <ChevronDownIcon />
                 </button>
               ) : (
-                <a href={link.href} className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center font-medium">
+                <Link to={link.href.startsWith('/#/') ? link.href.substring(2) : link.href} className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center font-medium">
                   {link.label}
-                </a>
+                </Link>
               )}
               {link.subMenu && openDropdown === link.label && (
                 <DropdownMenu items={link.subMenu} closeDropdown={() => setOpenDropdown(null)} />
@@ -101,9 +101,10 @@ const Header = () => {
         <div className="hidden lg:flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              {user?.role === 'admin' && (
+              {currentRole === 'admin' && (
                  <span className="text-xs font-bold bg-red-100 text-red-800 px-2 py-1 rounded-md">ADMIN</span>
               )}
+              <WorkspaceSelector />
               <Link to="/dashboard" className="font-semibold text-brand-dark-grey hover:text-brand-medium-teal">Dashboard</Link>
               <Link to="/profile" className="font-semibold text-brand-dark-grey hover:text-brand-medium-teal">Profile</Link>
               <button onClick={handleLogout} className="text-brand-dark-grey hover:text-brand-medium-teal">Log Out</button>
@@ -135,23 +136,29 @@ const Header = () => {
             </div>
             {NAV_LINKS.map((link) => (
               <div key={link.label}>
-                <a href={link.href} className="block text-brand-dark-teal font-bold py-2 text-lg">{link.label}</a>
-                {link.subMenu && (
-                  <div className="pl-4 border-l-2 border-brand-light-grey ml-1 my-2 space-y-3">
-                    {link.subMenu.map(subLink => (
-                       <Link key={subLink.label} to={subLink.href.substring(2)} onClick={() => setIsMobileMenuOpen(false)} className="block group">
-                           <span className="block text-brand-dark-grey font-medium group-hover:text-brand-medium-teal">{subLink.label}</span>
-                           <span className="block text-xs text-brand-grey mt-0.5">{subLink.description}</span>
-                       </Link>
-                    ))}
-                  </div>
+                {link.subMenu ? (
+                    <>
+                        <div className="text-brand-dark-teal font-bold py-2 text-lg">{link.label}</div>
+                        <div className="pl-4 border-l-2 border-brand-light-grey ml-1 my-2 space-y-3">
+                            {link.subMenu.map(subLink => (
+                            <Link key={subLink.label} to={subLink.href.startsWith('/#/') ? subLink.href.substring(2) : subLink.href} onClick={() => setIsMobileMenuOpen(false)} className="block group">
+                                <span className="block text-brand-dark-grey font-medium group-hover:text-brand-medium-teal">{subLink.label}</span>
+                                <span className="block text-xs text-brand-grey mt-0.5">{subLink.description}</span>
+                            </Link>
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <Link to={link.href.startsWith('/#/') ? link.href.substring(2) : link.href} onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-teal font-bold py-2 text-lg">
+                        {link.label}
+                    </Link>
                 )}
               </div>
             ))}
             {isAuthenticated ? (
               <>
                 <div className="border-t border-brand-light-grey my-4 pt-4">
-                    <p className="text-sm text-brand-grey px-0 mb-2">Signed in as {user?.role}</p>
+                    <p className="text-sm text-brand-grey px-0 mb-2">Signed in as {currentRole}</p>
                 </div>
                 <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2 font-medium">Dashboard</Link>
                 <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2 font-medium">Profile</Link>

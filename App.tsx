@@ -21,6 +21,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import RequestDemoModal from './components/RequestDemoModal';
 import Resources from './components/Resources';
 import LoginPage from './components/LoginPage';
+import SignupPage from './components/SignupPage';
 import DashboardPage from './components/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProfilePage from './components/dashboard/ProfilePage';
@@ -79,6 +80,9 @@ const AppContent = () => {
         <Route path="/legal" element={<ComingSoonPage />} />
         
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        
+        {/* Protected Dashboard Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/idea-generator" element={<IdeaGeneratorPage />} />

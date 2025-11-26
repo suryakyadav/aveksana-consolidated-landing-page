@@ -1,7 +1,9 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
+
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { User, GeneratedIdea, PipelineProject, PipelineStatus, Activity, StrategicPlan, ImplementationItem } from '../types';
+import { useNavigate } from 'react-router-dom';
+import type { User, GeneratedIdea, PipelineProject, PipelineStatus, Activity, StrategicPlan, ImplementationItem, Workspace, UserRole } from '../types';
 import { useUser } from '../hooks/useAuthQuery';
 
 interface AuthContextType {
@@ -9,10 +11,16 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isError: boolean;
-  login: (userData: any) => void; // Kept for compatibility, but consumers should prefer useLogin hook directly
+  login: (userData: any) => void; 
   logout: () => void;
   
-  // Data mutations (client-side for now, or optimistic updates)
+  // Workspace Management
+  activeWorkspace: Workspace | null;
+  availableWorkspaces: Workspace[];
+  switchWorkspace: (workspaceId: string) => void;
+  currentRole: UserRole; // Role in the active workspace
+
+  // Data mutations
   updateSavedIdeas: (ideas: GeneratedIdea[]) => void;
   updatePipelineProjects: (projects: PipelineProject[]) => void;
   promoteIdeaToPipeline: (idea: GeneratedIdea) => void;
@@ -30,22 +38,72 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { data: user, isLoading, isError } = useUser();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
+  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+  const [availableWorkspaces, setAvailableWorkspaces] = useState<Workspace[]>([]);
+
+  // Calculate available workspaces when user loads
+  useEffect(() => {
+      if (user) {
+          const workspaces: Workspace[] = [];
+          
+          // 1. Always add Personal Workspace
+          workspaces.push({
+              id: 'personal',
+              type: 'Personal',
+              name: 'Personal Workspace',
+              roles: ['student'] // Default role for personal space
+          });
+
+          // 2. Add Organization Workspaces
+          if (user.memberships && user.memberships.length > 0) {
+              user.memberships.forEach(membership => {
+                  workspaces.push({
+                      id: membership.organization.id,
+                      type: 'Organization',
+                      name: membership.organization.name,
+                      organizationId: membership.organization.id,
+                      roles: membership.roles
+                  });
+              });
+          }
+
+          setAvailableWorkspaces(workspaces);
+
+          // Set initial active workspace if not set
+          if (!activeWorkspace) {
+              // Prefer Organization if exists, else Personal
+              // In a real app, we'd check localStorage for last used workspace
+              const preferred = workspaces.length > 1 ? workspaces[1] : workspaces[0];
+              setActiveWorkspace(preferred);
+          }
+      }
+  }, [user]);
+
+  const switchWorkspace = (workspaceId: string) => {
+      const found = availableWorkspaces.find(w => w.id === workspaceId);
+      if (found) {
+          setActiveWorkspace(found);
+          navigate('/dashboard'); // Reset to dashboard on switch
+      }
+  };
 
   const logout = () => {
     localStorage.removeItem('authToken');
-    queryClient.setQueryData(['user'], null);
-    // window.location.href = '/login'; // Let the router/ProtectedRoute handle the redirect
+    localStorage.removeItem('mock_user_role');
+    localStorage.removeItem('mock_user_email');
+    setActiveWorkspace(null);
+    setAvailableWorkspaces([]);
+    queryClient.removeQueries({ queryKey: ['user'] });
+    navigate('/');
   };
 
-  // Deprecated: purely for compatibility if any component calls login() directly without the hook
   const login = () => {
       console.warn("Use useLogin hook for authentication.");
   };
 
-  // -- Helper functions to mutate the cached user object --
-  // In a full implementation, these would trigger individual API mutations.
-  // For now, we update the React Query cache locally to maintain dashboard interactivity.
-
+  // -- Helper functions (unchanged logic, just context access) --
   const updateUserCache = (updater: (currentUser: User) => User) => {
       queryClient.setQueryData<User>(['user'], (oldUser) => {
           if (!oldUser) return oldUser;
@@ -162,15 +220,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const isAuthenticated = !!user;
+  
+  // Determine effective role in current workspace
+  const currentRole = activeWorkspace?.roles[0] || 'student';
 
   return (
     <AuthContext.Provider value={{ 
         isAuthenticated, 
-        user: user || null, // react-query returns undefined, type expects null
+        user: user || null, 
         isLoading, 
         isError, 
         login, 
-        logout, 
+        logout,
+        activeWorkspace,
+        availableWorkspaces,
+        switchWorkspace,
+        currentRole,
         updateSavedIdeas, 
         updatePipelineProjects, 
         promoteIdeaToPipeline, 

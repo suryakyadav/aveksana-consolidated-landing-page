@@ -50,7 +50,33 @@ export interface Activity {
   link: string;
 }
 
-export type UserRole = 'admin' | 'team_lead' | 'researcher' | 'supervisor';
+export type UserRole = 'admin' | 'team_lead' | 'researcher' | 'supervisor' | 'student';
+
+export type OrganizationType = 'University' | 'Corporate';
+
+export interface Organization {
+  id: string;
+  name: string;
+  type: OrganizationType;
+  domain: string;
+  logoUrl?: string;
+  ssoEnabled?: boolean;
+}
+
+export interface Membership {
+  organization: Organization;
+  roles: UserRole[];
+}
+
+export type WorkspaceType = 'Personal' | 'Organization';
+
+export interface Workspace {
+  id: string;
+  type: WorkspaceType;
+  name: string;
+  organizationId?: string;
+  roles: UserRole[]; // Effective roles in this workspace
+}
 
 export interface ChatMessage {
   id: string;
@@ -107,10 +133,13 @@ export interface StrategicPlan {
 }
 
 export interface User {
+  id: string;
   name: string;
   email: string;
-  role: UserRole;
-  organization: string;
+  role: UserRole; // Primary/Default role
+  organization: string; // Legacy string, keep for now
+  memberships: Membership[]; // New Multi-tenant support
+  
   expertise: string[];
   savedIdeas?: GeneratedIdea[];
   pipelineProjects?: PipelineProject[];
