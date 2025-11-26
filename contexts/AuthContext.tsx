@@ -1,12 +1,18 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { User, GeneratedIdea, PipelineProject, PipelineStatus, Activity, StrategicPlan, ImplementationItem } from '../types';
+import { useUser } from '../hooks/useAuthQuery';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (userData: User) => void;
+  isLoading: boolean;
+  isError: boolean;
+  login: (userData: any) => void; // Kept for compatibility, but consumers should prefer useLogin hook directly
   logout: () => void;
+  
+  // Data mutations (client-side for now, or optimistic updates)
   updateSavedIdeas: (ideas: GeneratedIdea[]) => void;
   updatePipelineProjects: (projects: PipelineProject[]) => void;
   promoteIdeaToPipeline: (idea: GeneratedIdea) => void;
@@ -22,185 +28,160 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { data: user, isLoading, isError } = useUser();
+  const queryClient = useQueryClient();
 
-  const login = (userData: User) => {
-    const userWithData = {
-        ...userData,
-        savedIdeas: userData.savedIdeas || [],
-        pipelineProjects: userData.pipelineProjects || [],
-        recentActivity: userData.recentActivity || [],
-        strategies: userData.strategies || [],
-    };
-    setIsAuthenticated(true);
-    setUser(userWithData);
-  };
-  
   const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
+    localStorage.removeItem('authToken');
+    queryClient.setQueryData(['user'], null);
+    // window.location.href = '/login'; // Let the router/ProtectedRoute handle the redirect
+  };
+
+  // Deprecated: purely for compatibility if any component calls login() directly without the hook
+  const login = () => {
+      console.warn("Use useLogin hook for authentication.");
+  };
+
+  // -- Helper functions to mutate the cached user object --
+  // In a full implementation, these would trigger individual API mutations.
+  // For now, we update the React Query cache locally to maintain dashboard interactivity.
+
+  const updateUserCache = (updater: (currentUser: User) => User) => {
+      queryClient.setQueryData<User>(['user'], (oldUser) => {
+          if (!oldUser) return oldUser;
+          return updater(oldUser);
+      });
   };
 
   const updateSavedIdeas = (ideas: GeneratedIdea[]) => {
-    setUser(currentUser => {
-        if (!currentUser) return null;
-        return { ...currentUser, savedIdeas: ideas };
-    });
+    updateUserCache(user => ({ ...user, savedIdeas: ideas }));
   };
 
   const updatePipelineProjects = (projects: PipelineProject[]) => {
-    setUser(currentUser => {
-        if (!currentUser) return null;
-        return { ...currentUser, pipelineProjects: projects };
-    });
+    updateUserCache(user => ({ ...user, pipelineProjects: projects }));
   };
 
   const promoteIdeaToPipeline = (ideaToPromote: GeneratedIdea) => {
-      setUser(currentUser => {
-        if (!currentUser) return null;
-        
-        // Remove from saved ideas
-        const newSavedIdeas = (currentUser.savedIdeas || []).filter(idea => idea.title !== ideaToPromote.title);
-        
-        // Add to pipeline projects with 'Ideation' status
+      updateUserCache(user => {
+        const newSavedIdeas = (user.savedIdeas || []).filter(idea => idea.title !== ideaToPromote.title);
         const newProject: PipelineProject = { ...ideaToPromote, status: 'Ideation' };
-        const newPipelineProjects = [...(currentUser.pipelineProjects || []), newProject];
-
-        return {
-            ...currentUser,
-            savedIdeas: newSavedIdeas,
-            pipelineProjects: newPipelineProjects
-        };
+        const newPipelineProjects = [...(user.pipelineProjects || []), newProject];
+        return { ...user, savedIdeas: newSavedIdeas, pipelineProjects: newPipelineProjects };
       });
   };
 
   const promoteTaskToProject = (strategyId: string, task: ImplementationItem) => {
-    setUser(currentUser => {
-        if (!currentUser || !currentUser.strategies) return currentUser;
-
-        // 1. Create the new project
+    updateUserCache(user => {
+        if (!user.strategies) return user;
         const newProject: PipelineProject = {
             title: task.title,
             overview: task.description,
-            gapScore: 0, // Not calculated yet
+            gapScore: 0,
             literature: [],
             priority: 'Medium',
             status: 'Ideation',
             relatedStrategyId: strategyId,
             relatedPriorityId: task.relatedPriorityId
         };
-        const newPipelineProjects = [...(currentUser.pipelineProjects || []), newProject];
-
-        // 2. Update the strategy task to link to the new project
-        const newStrategies = currentUser.strategies.map(s => {
+        const newPipelineProjects = [...(user.pipelineProjects || []), newProject];
+        const newStrategies = user.strategies.map(s => {
             if (s.id === strategyId && s.implementation) {
-                return {
-                    ...s,
-                    implementation: s.implementation.map(t => 
-                        t.id === task.id ? { ...t, relatedProjectId: task.title } : t
-                    )
-                };
+                return { ...s, implementation: s.implementation.map(t => t.id === task.id ? { ...t, relatedProjectId: task.title } : t) };
             }
             return s;
         });
-
-        // 3. Add activity
         const newActivity: Activity = {
             type: 'project_access',
             title: task.title,
             link: `/dashboard/project/${encodeURIComponent(task.title)}`,
             timestamp: new Date().toISOString()
         };
-        const updatedActivity = [newActivity, ...(currentUser.recentActivity || [])].slice(0, 5);
-
-        return {
-            ...currentUser,
-            pipelineProjects: newPipelineProjects,
-            strategies: newStrategies,
-            recentActivity: updatedActivity
-        };
+        const updatedActivity = [newActivity, ...(user.recentActivity || [])].slice(0, 5);
+        return { ...user, pipelineProjects: newPipelineProjects, strategies: newStrategies, recentActivity: updatedActivity };
     });
   };
 
   const updateProjectStatus = (projectTitle: string, newStatus: PipelineStatus) => {
-    setUser(currentUser => {
-        if (!currentUser || !currentUser.pipelineProjects) return currentUser;
-
-        const updatedProjects = currentUser.pipelineProjects.map(project => 
+    updateUserCache(user => {
+        if (!user.pipelineProjects) return user;
+        const updatedProjects = user.pipelineProjects.map(project => 
             project.title === projectTitle ? { ...project, status: newStatus } : project
         );
-
-        return {
-            ...currentUser,
-            pipelineProjects: updatedProjects
-        };
+        return { ...user, pipelineProjects: updatedProjects };
     });
   };
   
   const updateProjectDetails = (projectTitle: string, details: Partial<PipelineProject>) => {
-    setUser(currentUser => {
-        if (!currentUser || !currentUser.pipelineProjects) return currentUser;
-
-        const updatedProjects = currentUser.pipelineProjects.map(project => 
+    updateUserCache(user => {
+        if (!user.pipelineProjects) return user;
+        const updatedProjects = user.pipelineProjects.map(project => 
             project.title === projectTitle ? { ...project, ...details } : project
         );
-        
-        return {
-            ...currentUser,
-            pipelineProjects: updatedProjects
-        };
+        return { ...user, pipelineProjects: updatedProjects };
     });
   };
 
   const addActivity = (activity: Omit<Activity, 'timestamp'>) => {
-    setUser(currentUser => {
-        if (!currentUser) return null;
-        const newActivity: Activity = {
-            ...activity,
-            timestamp: new Date().toISOString(),
-        };
-        // Add new activity and keep the list to a max of 5 items
-        const updatedActivity = [newActivity, ...(currentUser.recentActivity || [])].slice(0, 5);
-        return { ...currentUser, recentActivity: updatedActivity };
+    updateUserCache(user => {
+        const newActivity: Activity = { ...activity, timestamp: new Date().toISOString() };
+        const updatedActivity = [newActivity, ...(user.recentActivity || [])].slice(0, 5);
+        return { ...user, recentActivity: updatedActivity };
     });
   };
 
   const saveStrategy = (strategy: StrategicPlan) => {
-      setUser(currentUser => {
-          if (!currentUser) return null;
-          const existing = currentUser.strategies || [];
+      updateUserCache(user => {
+          const existing = user.strategies || [];
           const index = existing.findIndex(s => s.id === strategy.id);
           let newStrategies;
           if (index >= 0) {
               newStrategies = existing.map(s => s.id === strategy.id ? strategy : s);
           } else {
-              newStrategies = [strategy, ...existing]; // Add to top
+              newStrategies = [strategy, ...existing];
           }
-          return { ...currentUser, strategies: newStrategies };
+          return { ...user, strategies: newStrategies };
       });
   };
 
   const updateStrategy = (id: string, updates: Partial<StrategicPlan>) => {
-      setUser(currentUser => {
-          if (!currentUser || !currentUser.strategies) return currentUser;
-          const newStrategies = currentUser.strategies.map(s => 
+      updateUserCache(user => {
+          if (!user.strategies) return user;
+          const newStrategies = user.strategies.map(s => 
               s.id === id ? { ...s, ...updates, updatedAt: new Date().toISOString() } : s
           );
-          return { ...currentUser, strategies: newStrategies };
+          return { ...user, strategies: newStrategies };
       });
   };
 
   const deleteStrategy = (id: string) => {
-    setUser(currentUser => {
-        if (!currentUser || !currentUser.strategies) return currentUser;
-        const newStrategies = currentUser.strategies.filter(s => s.id !== id);
-        return { ...currentUser, strategies: newStrategies };
+    updateUserCache(user => {
+        if (!user.strategies) return user;
+        const newStrategies = user.strategies.filter(s => s.id !== id);
+        return { ...user, strategies: newStrategies };
     });
   };
 
+  const isAuthenticated = !!user;
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateSavedIdeas, updatePipelineProjects, promoteIdeaToPipeline, promoteTaskToProject, updateProjectStatus, updateProjectDetails, addActivity, saveStrategy, updateStrategy, deleteStrategy }}>
+    <AuthContext.Provider value={{ 
+        isAuthenticated, 
+        user: user || null, // react-query returns undefined, type expects null
+        isLoading, 
+        isError, 
+        login, 
+        logout, 
+        updateSavedIdeas, 
+        updatePipelineProjects, 
+        promoteIdeaToPipeline, 
+        promoteTaskToProject, 
+        updateProjectStatus, 
+        updateProjectDetails, 
+        addActivity, 
+        saveStrategy, 
+        updateStrategy, 
+        deleteStrategy 
+    }}>
       {children}
     </AuthContext.Provider>
   );

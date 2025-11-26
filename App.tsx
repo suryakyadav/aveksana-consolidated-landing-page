@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import AudienceSection from './components/AudienceSection';
@@ -35,6 +36,7 @@ import DocumentationPage from './components/DocumentationPage';
 import ResourcesPage from './components/ResourcesPage';
 import ComingSoonPage from './components/ComingSoonPage';
 
+const queryClient = new QueryClient();
 
 const LandingPage = () => {
   return (
@@ -103,13 +105,15 @@ const AppContent = () => {
 
 function App() {
   return (
-    <HashRouter>
-      <ModalProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </ModalProvider>
-    </HashRouter>
+    <QueryClientProvider client={queryClient}>
+      <HashRouter>
+        <ModalProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </ModalProvider>
+      </HashRouter>
+    </QueryClientProvider>
   );
 }
 
