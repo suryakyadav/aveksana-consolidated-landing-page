@@ -1,3 +1,5 @@
+
+
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from './ProductCard';
@@ -26,10 +28,10 @@ const ForCorporationsPage = () => {
        <div className="absolute -bottom-1/4 right-0 w-1/2 h-1/2 bg-brand-medium-teal/10 rounded-full filter blur-3xl"></div>
       <div className="container mx-auto px-6 relative z-10">
         <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-          Transform your R&D from idea-driven to data-driven.
+          Streamline innovation and accelerate R&D outcomes.
         </h1>
         <p className="mt-6 text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
-          Aveksana empowers corporate innovation teams to identify emerging opportunities, generate fundable proposals, and manage research pipelines — all in one unified AI workspace.
+          From experiment tracking to AI-assisted grant writing for non-dilutive funding, Aveksana modernizes your research pipeline.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
           <button onClick={openDemoModal} className="bg-brand-seafoam text-brand-dark-teal font-bold px-8 py-3 rounded-lg shadow-md hover:opacity-90 transition-all transform hover:scale-105 w-full sm:w-auto">
@@ -115,37 +117,8 @@ const ForCorporationsPage = () => {
     </section>
   );
 
-  const ImplementationSection = () => (
-    <section className="py-20 bg-brand-off-white">
-      <div className="container mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">Fast, Low-Risk Enterprise Adoption</h2>
-        <p className="mt-4 text-lg text-brand-dark-grey">Typical pilot duration: 2–4 weeks.</p>
-        <div className="mt-12 max-w-5xl mx-auto">
-          <div className="relative">
-            <div className="absolute top-8 left-0 w-full h-0.5 bg-brand-light-grey hidden md:block"></div>
-            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8 md:gap-0">
-              {[
-                { num: '1️⃣', text: 'Discovery & Demo' },
-                { num: '2️⃣', text: 'Pilot with 1-2 teams' },
-                { num: '3️⃣', text: 'Full R&D rollout' },
-                { num: '4️⃣', text: 'Continuous analytics & optimization' },
-              ].map(step => (
-                 <div key={step.num} className="flex flex-col items-center text-center w-52 mx-auto md:mx-0">
-                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-brand-off-white border-2 border-brand-grey shadow-sm z-10 text-3xl">
-                      <span>{step.num}</span>
-                    </div>
-                    <h4 className="mt-4 font-semibold text-md text-brand-dark-teal">{step.text}</h4>
-                  </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-
   const TestimonialsSection = () => (
-    <section className="py-20 bg-brand-light-gray-blue">
+    <section className="py-20 bg-brand-off-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">Validation from Industry Leaders</h2>
@@ -160,16 +133,13 @@ const ForCorporationsPage = () => {
   );
 
   const FinalCTASection = () => (
-    <section className="py-20 bg-brand-off-white">
+    <section className="py-20 bg-brand-light-gray-blue">
       <div className="container mx-auto px-6 text-center">
         <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal max-w-3xl mx-auto">Accelerate your innovation pipeline today.</h2>
         <p className="mt-4 text-lg text-brand-dark-grey">Join leading R&D organizations using Aveksana to uncover opportunities, automate funding, and innovate faster.</p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
           <button onClick={openDemoModal} className="bg-brand-medium-teal text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-brand-teal transition-all transform hover:scale-105">
             Book a Demo
-          </button>
-          <button onClick={openDemoModal} className="text-brand-dark-grey hover:text-brand-medium-teal font-semibold px-4 py-2">
-            Request Enterprise Trial
           </button>
         </div>
          <p className="mt-4 text-sm text-brand-grey">Enterprise onboarding and support included.</p>
@@ -184,7 +154,6 @@ const ForCorporationsPage = () => {
       <SuiteSection />
       <OutcomesSection />
       <SecuritySection />
-      <ImplementationSection />
       <TestimonialsSection />
       <FinalCTASection />
     </main>

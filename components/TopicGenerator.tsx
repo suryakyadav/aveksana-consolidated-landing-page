@@ -45,7 +45,10 @@ const TopicGenerator = () => {
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold text-brand-dark-teal">Try the Thesis Engine — free.</h2>
           <p className="mt-4 text-lg text-brand-dark-grey">
-            Use our free AI Topic Generator to spark inspiration for your research. No sign-up required to try.
+            Generate research topics, refine ideas, and jumpstart your thesis with zero sign-up.
+          </p>
+          <p className="mt-2 text-sm font-semibold text-brand-medium-teal">
+             Used by 40,000+ students globally
           </p>
         </div>
         <div className="bg-brand-off-white p-8 rounded-xl shadow-lg border border-brand-light-grey">

@@ -909,7 +909,7 @@ const StrategyPage = () => {
                             </div>
                         ) : (
                             <div className="space-y-8">
-                                {Object.entries(groupedPriorities).map(([pillar, items]) => (
+                                {(Object.entries(groupedPriorities) as [string, PriorityItem[]][]).map(([pillar, items]) => (
                                     <div key={pillar}>
                                         <h3 className="text-md font-bold text-brand-grey uppercase tracking-wider mb-4 border-b border-brand-light-grey pb-2">{pillar}</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -989,7 +989,7 @@ const StrategyPage = () => {
                             </div>
                         ) : (
                             <div className="space-y-12">
-                                {Object.entries(groupedTasks).map(([priorityGroup, tasks]) => (
+                                {(Object.entries(groupedTasks) as [string, ImplementationItem[]][]).map(([priorityGroup, tasks]) => (
                                     <div key={priorityGroup}>
                                         <div className="flex items-center gap-3 mb-4">
                                             <FlagIcon />

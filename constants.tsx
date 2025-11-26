@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import type { NavLink, Product, Testimonial } from './types';
 import { ThesisIcon, ArthaIcon, RDPortalIcon } from './components/icons';
@@ -7,22 +9,51 @@ export const NAV_LINKS: NavLink[] = [
     label: 'Products',
     href: '/#products',
     subMenu: [
-      { label: 'Thesis Support System', href: '/#/products/thesis-support-system' },
-      { label: 'Artha - AI Grant Writer', href: '/#/products/artha-ai-grant-writer' },
-      { label: 'R&D Portal', href: '/#/products/rd-portal' },
+      { 
+        label: 'Thesis Support System', 
+        href: '/#/products/thesis-support-system',
+        description: 'Improve research quality with AI-assisted supervision and academic integrity tools.'
+      },
+      { 
+        label: 'Artha — AI Grant Writer', 
+        href: '/#/products/artha-ai-grant-writer',
+        description: 'Boost grant success with optimized, data-driven proposal generation.'
+      },
+      { 
+        label: 'R&D Portal', 
+        href: '/#/products/rd-portal',
+        description: 'Centralize experiments, knowledge, and collaboration for research teams.'
+      },
     ],
   },
   {
     label: 'Solutions',
     href: '/#demo',
     subMenu: [
-      { label: 'For Universities', href: '/#/solutions/for-universities' },
-      { label: 'For Corporations', href: '/#/solutions/for-corporations' },
-      { label: 'For Individuals', href: '/#/solutions/for-individuals' },
+      { 
+        label: 'For Students & Researchers', 
+        href: '/#/solutions/for-students',
+        description: 'Tools to plan, write, and complete theses with structured guidance.'
+      },
+      { 
+        label: 'For Supervisors & Faculty', 
+        href: '/#/solutions/for-supervisors',
+        description: 'Manage multiple students, streamline feedback, and ensure quality.'
+      },
+      { 
+        label: 'For Universities', 
+        href: '/#/solutions/for-universities',
+        description: 'Full research lifecycle oversight with security, compliance & reporting.'
+      },
+      { 
+        label: 'For Corporate R&D', 
+        href: '/#/solutions/for-corporations',
+        description: 'Modernize innovation workflows and accelerate R&D output.'
+      },
     ],
   },
-  { label: 'Resources', href: '/#resources' },
-  { label: 'Pricing', href: '/#/solutions/for-individuals#plans' },
+  { label: 'Resources', href: '/#/resources' },
+  { label: 'Pricing', href: '/#/solutions/for-students#plans' },
 ];
 
 export const PRODUCTS: Product[] = [
@@ -30,21 +61,21 @@ export const PRODUCTS: Product[] = [
     id: 'thesis-support-system',
     icon: <ThesisIcon />,
     title: 'Thesis Support System',
-    description: 'Ensure academic integrity and research quality with AI-powered supervision and plagiarism detection.',
+    description: 'Support students with guided writing, real-time feedback, supervision dashboards, and academic integrity automation.',
     keyFeatures: ['AI-Powered Feedback & Review', 'Advanced Plagiarism Detection', 'Real-time Progress Tracking Dashboards', 'Secure Document Management'],
   },
   {
     id: 'artha-ai-grant-writer',
     icon: <ArthaIcon />,
     title: 'Artha — AI Grant Writer',
-    description: 'Accelerate funding success with data-driven grant proposal creation and optimization.',
+    description: 'Produce compelling, funder-aligned proposals with intelligent drafting, optimization, and collaboration tools.',
     keyFeatures: ['Data-Driven Proposal Generation', 'Funding Opportunity Matching', 'Collaborative Writing Environment', 'Budgeting & Compliance Tools'],
   },
   {
     id: 'rd-portal',
     icon: <RDPortalIcon />,
     title: 'R&D Portal',
-    description: 'Foster innovation and collaboration with a centralized platform for experimentation and discovery.',
+    description: 'Streamline collaboration, experiment tracking, and knowledge management for research and innovation teams.',
     keyFeatures: ['Centralized Experiment Logging', 'Intellectual Property Management', 'Team Collaboration & Tasking', 'Data Visualization & Analytics'],
   },
 ];
@@ -52,19 +83,19 @@ export const PRODUCTS: Product[] = [
 export const TESTIMONIALS: Testimonial[] = [
     {
       avatar: `https://picsum.photos/id/1005/100/100`,
-      quote: 'Aveksana streamlined my entire dissertation process. The feedback tools were invaluable.',
+      quote: 'Aveksana transformed my dissertation journey. The structured feedback saved weeks of revisions.',
       name: 'Dr. Elena Vance',
       role: 'PhD Graduate',
     },
     {
       avatar: `https://picsum.photos/id/1011/100/100`,
-      quote: 'Supervising multiple students is now manageable and more effective. I can track progress effortlessly.',
+      quote: 'Managing multiple students is finally manageable. I can track everything from one place.',
       name: 'Prof. Ben Carter',
       role: 'University Supervisor',
     },
     {
       avatar: `https://picsum.photos/id/1027/100/100`,
-      quote: 'The R&D portal has become the backbone of our innovation pipeline. A game-changer for corporate research.',
+      quote: 'Our R&D pipeline became dramatically more organized. The portal is now core to our workflow.',
       name: 'Aisha Khan',
       role: 'Innovation Lead, TechCorp',
     },
@@ -79,21 +110,22 @@ export const SOCIAL_PROOF_LOGOS = [
     { name: 'QuantumLeap', src: 'https://via.placeholder.com/150x50/cccccc/888888?text=QuantumLeap' },
 ];
 
+// -- Students & Researchers Content --
 export const WHY_AVEKSANA_INDIVIDUALS = [
   {
     icon: '💡',
-    title: 'Discover Ideas',
-    description: 'Find novel, high-impact research gaps instantly.'
+    title: 'Smart Topic Generation',
+    description: 'Find novel, high-impact research gaps instantly based on your interests.'
   },
   {
-    icon: '✍️',
-    title: 'Structure Proposals',
-    description: 'Draft outlines and align with real funding calls.'
+    icon: '📚',
+    title: 'Chapter-Level Guidance',
+    description: 'Get structured templates and writing aids for every section of your thesis.'
   },
   {
-    icon: '🤝',
-    title: 'Collaborate & Share',
-    description: 'Get AI feedback or invite supervisors later.'
+    icon: '🔄',
+    title: 'Feedback Loops',
+    description: 'Receive instant AI critiques on logic, flow, and argumentation before submitting.'
   }
 ];
 
@@ -112,7 +144,7 @@ export const INDIVIDUAL_SUCCESS_STORIES: Testimonial[] = [
   },
   {
     avatar: `https://picsum.photos/id/1035/100/100`,
-    quote: 'The topic generator is a lifesaver. It helped me find a unique angle for my masters thesis that got my supervisor really excited.',
+    quote: 'The topic generator is a lifesaver. It helped me find a unique angle for my masters thesis.',
     name: 'Samuel Jones',
     role: 'M.Sc. Candidate, Environmental Science',
   },
@@ -142,21 +174,42 @@ export const INDIVIDUAL_PLANS = [
     },
 ] as const;
 
+
+// -- Supervisors Content --
+export const SUPERVISOR_FEATURES = [
+    {
+      icon: '📊',
+      title: 'Progress Dashboard',
+      description: 'Track milestones for all your students in one single view.'
+    },
+    {
+      icon: '🛡️',
+      title: 'Integrity Checks',
+      description: 'Automated plagiarism and AI-content detection reports.'
+    },
+    {
+      icon: '💬',
+      title: 'Structured Feedback',
+      description: 'Streamline commenting and review cycles to save hours of reading time.'
+    }
+  ];
+
+// -- University Content --
 export const UNIVERSITY_CHALLENGES = [
   {
     icon: '🧑‍🎓',
-    title: 'Supervision bottlenecks',
-    description: 'Centralized Thesis Support System ensures consistent feedback and quality.',
+    title: 'Centralized Management',
+    description: 'Unified oversight for all departmental research activities and outputs.',
   },
   {
-    icon: '🧾',
-    title: 'Low grant success rates',
-    description: 'Artha helps faculty and students craft data-aligned, fundable proposals.',
+    icon: '⚖️',
+    title: 'Compliance Tools',
+    description: 'Automated ethics approvals, integrity checks, and regulatory reporting.',
   },
   {
-    icon: '🧠',
-    title: 'Fragmented research processes',
-    description: 'Unified R&D Portal enables cross-department collaboration and tracking.',
+    icon: '💰',
+    title: 'Grant Office Automation',
+    description: 'Accelerate funding applications with institutional templates and data.',
   },
 ];
 
@@ -194,21 +247,22 @@ export const UNIVERSITY_TESTIMONIALS: Testimonial[] = [
     },
 ];
 
+// -- Corporate Content --
 export const CORPORATE_CHALLENGES = [
   {
-    icon: '⚙️',
-    title: 'Scattered innovation efforts',
-    description: 'Centralize R&D ideas, proposals, and data in one platform.',
+    icon: '🧪',
+    title: 'Experiment Tracking',
+    description: 'Log and analyze experimental data in a secure, centralized portal.',
   },
   {
-    icon: '💸',
-    title: 'Inefficient funding & proposal processes',
-    description: 'Use Artha to auto-generate compelling, evidence-backed proposals for grants and internal funding.',
+    icon: '🧠',
+    title: 'Knowledge Repository',
+    description: 'Retain institutional knowledge and avoid duplicating failed experiments.',
   },
   {
-    icon: '🧭',
-    title: 'Slow idea-to-impact cycles',
-    description: 'Predict trends and prioritize opportunities with AI-driven insights.',
+    icon: '🤝',
+    title: 'Cross-Team Collaboration',
+    description: 'Break silos between R&D, product, and engineering teams.',
   },
 ];
 

@@ -7,7 +7,7 @@ const SocialProof = () => {
     <section className="py-12 bg-brand-off-white">
       <div className="container mx-auto px-6">
         <h3 className="text-center text-sm font-semibold text-brand-grey uppercase tracking-wider">
-          Trusted by leading institutions and R&D teams
+          Trusted by leading universities, research groups, and corporate R&D teams.
         </h3>
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center">
           {SOCIAL_PROOF_LOGOS.map((logo) => (

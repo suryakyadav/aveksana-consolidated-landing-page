@@ -1,92 +1,87 @@
+
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-
-const footerLinkData = [
-  {
-    title: 'Products',
-    links: [
-      { label: 'Thesis Support System', href: '/products/thesis-support-system', type: 'internal' },
-      { label: 'Artha', href: '/products/artha-ai-grant-writer', type: 'internal' },
-      { label: 'R&D Portal', href: '/products/rd-portal', type: 'internal' },
-    ],
-  },
-  {
-    title: 'Solutions',
-    links: [
-      { label: 'For Universities', href: '/solutions/for-universities', type: 'internal' },
-      { label: 'For Corporations', href: '/solutions/for-corporations', type: 'internal' },
-      { label: 'For Individuals', href: '/solutions/for-individuals', type: 'internal' },
-    ],
-  },
-  {
-    title: 'Resources',
-    links: [
-      { label: 'Blog', href: '#', type: 'anchor' },
-      { label: 'Case Studies', href: '#', type: 'anchor' },
-      { label: 'Documentation', href: '#', type: 'anchor' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'About Us', href: '#', type: 'anchor' },
-      { label: 'Careers', href: '#', type: 'anchor' },
-      { label: 'Contact', href: '#', type: 'anchor' },
-    ],
-  },
-   {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy Policy', href: '#', type: 'anchor' },
-      { label: 'Terms of Service', href: '#', type: 'anchor' },
-    ],
-  },
-];
-
+import { Link } from 'react-router-dom';
+import { useModal } from '../contexts/ModalContext';
 
 const Footer = () => {
-  const location = useLocation();
-  const isUniversityPage = location.pathname.includes('for-universities');
-  const isCorporatePage = location.pathname.includes('for-corporations');
+  const { openDemoModal } = useModal();
 
-  const MicroCTA = () => {
-    if (isUniversityPage) {
-      return (
-        <p className="text-gray-300">
-          Are you an individual researcher? <Link to="/solutions/for-individuals" className="font-semibold text-white hover:underline">Start for Free &rarr;</Link>
-        </p>
-      );
-    }
-     if (isCorporatePage) {
-      return (
-        <p className="text-gray-300">
-          Academic partner? <Link to="/solutions/for-universities" className="font-semibold text-white hover:underline">Explore University Solutions &rarr;</Link>
-        </p>
-      );
-    }
-    return (
-      <p className="text-gray-300">
-        Are you part of a university? <Link to="/solutions/for-universities" className="font-semibold text-white hover:underline">Book a Demo for institutional access &rarr;</Link>
-      </p>
-    );
-  };
-
+  const footerLinkData = [
+    {
+      title: 'Products',
+      links: [
+        { label: 'Thesis Support System', href: '/products/thesis-support-system', type: 'internal' },
+        { label: 'Artha Grant Writer', href: '/products/artha-ai-grant-writer', type: 'internal' },
+        { label: 'R&D Portal', href: '/products/rd-portal', type: 'internal' },
+        { label: 'Free Tools', href: '/#free-tool', type: 'internal' },
+        { label: 'Integrations', href: '/integrations', type: 'internal' },
+      ],
+    },
+    {
+      title: 'Solutions',
+      links: [
+        { label: 'For Students & Researchers', href: '/solutions/for-students', type: 'internal' },
+        { label: 'For Supervisors & Faculty', href: '/solutions/for-supervisors', type: 'internal' },
+        { label: 'For Universities', href: '/solutions/for-universities', type: 'internal' },
+        { label: 'For Corporate R&D', href: '/solutions/for-corporations', type: 'internal' },
+      ],
+    },
+    {
+      title: 'Resources',
+      links: [
+        { label: 'Blog', href: 'https://aveksana.com/blog', type: 'anchor' },
+        { label: 'Case Studies', href: '/resources', type: 'internal' }, // Redirect to resources hub
+        { label: 'Documentation', href: '/resources/documentation', type: 'internal' },
+        { label: 'Help Center', href: '/resources/documentation', type: 'internal' }, // Redirect to docs
+        { label: 'API Reference', href: '/resources/documentation#api-reference', type: 'internal' },
+      ],
+    },
+    {
+      title: 'Company',
+      links: [
+        { label: 'About Us', href: '/about', type: 'internal' },
+        { label: 'Careers', href: '/careers', type: 'internal' },
+        { label: 'Contact', action: openDemoModal, type: 'button' }, // Triggers modal
+        { label: 'Press Kit', href: '/press', type: 'internal' },
+        { label: 'Security & Compliance', href: '/resources/documentation#security', type: 'internal' },
+        { label: 'Status Page', href: '/status', type: 'internal' },
+      ],
+    },
+  ];
+  
   return (
     <footer className="bg-brand-dark-teal text-white">
       <div className="container mx-auto px-6 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+        {/* Top Value Statement */}
+        <div className="mb-12 border-b border-brand-teal pb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-white">Aveksana — the unified platform for theses, grants, and R&D innovation.</h2>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {footerLinkData.map(({ title, links }) => (
             <div key={title}>
-              <h4 className="font-semibold uppercase tracking-wider text-gray-400 text-sm">{title}</h4>
-              <ul className="mt-4 space-y-2">
-                {links.map(link => (
-                  <li key={link.label}>
-                    {link.type === 'internal' ? (
-                      <Link to={link.href} className="text-gray-300 hover:text-white transition-colors">
+              <h4 className="font-semibold uppercase tracking-wider text-gray-400 text-sm mb-4">{title}</h4>
+              <ul className="space-y-2">
+                {links.map((link, index) => (
+                  <li key={index}>
+                    {link.type === 'button' ? (
+                       <button 
+                          onClick={link.action}
+                          className="text-gray-300 hover:text-white transition-colors text-sm text-left"
+                       >
+                          {link.label}
+                       </button>
+                    ) : link.type === 'internal' ? (
+                      <Link to={link.href!} className="text-gray-300 hover:text-white transition-colors text-sm">
                         {link.label}
                       </Link>
                     ) : (
-                      <a href={link.href} className="text-gray-300 hover:text-white transition-colors">
+                      <a 
+                        href={link.href} 
+                        className="text-gray-300 hover:text-white transition-colors text-sm"
+                        target={link.href!.startsWith('http') ? '_blank' : undefined}
+                        rel={link.href!.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      >
                         {link.label}
                       </a>
                     )}
@@ -96,10 +91,21 @@ const Footer = () => {
             </div>
           ))}
         </div>
-        <div className="mt-16 pt-8 border-t border-brand-teal flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-          <p className="text-gray-400 order-2 md:order-1 mt-4 md:mt-0">&copy; {new Date().getFullYear()} Aveksana. All rights reserved.</p>
-          <div className="order-1 md:order-2">
-            <MicroCTA />
+
+        <div className="mt-16 pt-8 border-t border-brand-teal flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+             <p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} Aveksana. All rights reserved.</p>
+             <div className="flex gap-4 text-sm">
+                <Link to="/legal" className="text-gray-400 hover:text-white">Privacy Policy</Link>
+                <Link to="/legal" className="text-gray-400 hover:text-white">Terms of Service</Link>
+                <Link to="/legal" className="text-gray-400 hover:text-white">Cookies Policy</Link>
+                <Link to="/legal" className="text-gray-400 hover:text-white">Accessibility</Link>
+             </div>
+          </div>
+          
+          <div className="text-sm text-gray-400 flex items-center gap-2">
+             <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+             <span>Enterprise-grade security & data protection.</span>
           </div>
         </div>
       </div>

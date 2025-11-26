@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { NavLink } from '../types';
@@ -8,16 +9,19 @@ import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
 
 const DropdownMenu: React.FC<{ items: NavLink[]; closeDropdown: () => void }> = ({ items, closeDropdown }) => (
-  <div className="absolute top-full left-0 mt-2 w-56 bg-brand-off-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
-    <div className="py-1">
+  <div className="absolute top-full left-0 mt-2 w-80 bg-brand-off-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
+    <div className="py-2">
       {items.map((item) => (
         <Link
           key={item.label}
           to={item.href.startsWith('/#/') ? item.href.substring(2) : item.href}
-          className="block px-4 py-2 text-sm text-brand-dark-grey hover:bg-brand-light-grey"
+          className="block px-4 py-3 text-sm text-brand-dark-grey hover:bg-brand-light-grey group"
           onClick={closeDropdown}
         >
-          {item.label}
+          <span className="block font-semibold group-hover:text-brand-medium-teal">{item.label}</span>
+          {item.description && (
+             <span className="block text-xs text-brand-grey mt-0.5">{item.description}</span>
+          )}
         </Link>
       ))}
     </div>
@@ -69,13 +73,13 @@ const Header = () => {
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-brand-dark-teal font-heading">Aveksana</Link>
         
-        <nav ref={navRef} className="hidden md:flex items-center space-x-8">
+        <nav ref={navRef} className="hidden lg:flex items-center space-x-8">
           {NAV_LINKS.map((link) => (
             <div key={link.label} className="relative">
               {link.subMenu ? (
                 <button
                   onClick={() => setOpenDropdown(openDropdown === link.label ? null : link.label)}
-                  className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center"
+                  className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center font-medium"
                   aria-haspopup="true"
                   aria-expanded={openDropdown === link.label}
                 >
@@ -83,7 +87,7 @@ const Header = () => {
                   <ChevronDownIcon />
                 </button>
               ) : (
-                <a href={link.href} className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center">
+                <a href={link.href} className="text-brand-dark-grey hover:text-brand-medium-teal flex items-center font-medium">
                   {link.label}
                 </a>
               )}
@@ -94,7 +98,7 @@ const Header = () => {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden lg:flex items-center space-x-4">
           {isAuthenticated ? (
             <>
               {user?.role === 'admin' && (
@@ -106,13 +110,13 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className="text-brand-dark-grey hover:text-brand-medium-teal">Log In</Link>
+              <Link to="/login" className="text-brand-dark-grey hover:text-brand-medium-teal font-medium">Log In</Link>
               <button onClick={openDemoModal} className="bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
             </>
           )}
         </div>
 
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Open menu">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
@@ -123,15 +127,22 @@ const Header = () => {
       
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-brand-off-white shadow-lg">
-          <nav className="px-6 pt-2 pb-4 space-y-2">
+        <div className="lg:hidden bg-brand-off-white shadow-lg h-screen overflow-y-auto">
+          <nav className="px-6 pt-2 pb-20 space-y-2">
+            <div className="flex justify-between items-center mb-6 mt-4">
+                <span className="font-bold text-xl text-brand-dark-teal">Menu</span>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="text-brand-grey text-3xl">&times;</button>
+            </div>
             {NAV_LINKS.map((link) => (
               <div key={link.label}>
-                <a href={link.href} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">{link.label}</a>
+                <a href={link.href} className="block text-brand-dark-teal font-bold py-2 text-lg">{link.label}</a>
                 {link.subMenu && (
-                  <div className="pl-4">
+                  <div className="pl-4 border-l-2 border-brand-light-grey ml-1 my-2 space-y-3">
                     {link.subMenu.map(subLink => (
-                       <Link key={subLink.label} to={subLink.href.substring(2)} onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-grey hover:text-brand-medium-teal py-1">{subLink.label}</Link>
+                       <Link key={subLink.label} to={subLink.href.substring(2)} onClick={() => setIsMobileMenuOpen(false)} className="block group">
+                           <span className="block text-brand-dark-grey font-medium group-hover:text-brand-medium-teal">{subLink.label}</span>
+                           <span className="block text-xs text-brand-grey mt-0.5">{subLink.description}</span>
+                       </Link>
                     ))}
                   </div>
                 )}
@@ -139,22 +150,20 @@ const Header = () => {
             ))}
             {isAuthenticated ? (
               <>
-                <div className="border-t border-brand-light-grey my-2 pt-2">
+                <div className="border-t border-brand-light-grey my-4 pt-4">
                     <p className="text-sm text-brand-grey px-0 mb-2">Signed in as {user?.role}</p>
                 </div>
-                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Dashboard</Link>
-                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Profile</Link>
-                <button onClick={handleLogout} className="block w-full text-left text-brand-dark-grey hover:text-brand-medium-teal py-2">Log Out</button>
+                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2 font-medium">Dashboard</Link>
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2 font-medium">Profile</Link>
+                <button onClick={handleLogout} className="block w-full text-left text-brand-dark-grey hover:text-brand-medium-teal py-2 font-medium">Log Out</button>
               </>
             ) : (
-              <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2">Log In</Link>
+              <div className="border-t border-brand-light-grey my-4 pt-4">
+                 <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="block text-brand-dark-grey hover:text-brand-medium-teal py-2 font-medium mb-4">Log In</Link>
+                 <button onClick={handleDemoClick} className="block w-full text-center bg-brand-medium-teal text-white font-semibold px-4 py-3 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
+              </div>
             )}
           </nav>
-          {!isAuthenticated && (
-            <div className="px-6 pb-4">
-              <button onClick={handleDemoClick} className="block w-full text-center bg-brand-medium-teal text-white font-semibold px-4 py-2 rounded-md hover:bg-brand-teal transition-colors">Book a Demo</button>
-            </div>
-          )}
         </div>
       )}
     </header>

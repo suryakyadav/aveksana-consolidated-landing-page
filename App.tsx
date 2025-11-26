@@ -3,6 +3,7 @@ import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import AudienceSection from './components/AudienceSection';
 import SocialProof from './components/SocialProof';
 import ProductSuite from './components/ProductSuite';
 import Testimonials from './components/Testimonials';
@@ -10,7 +11,8 @@ import TopicGenerator from './components/TopicGenerator';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
 import ProductDetailPage from './components/ProductDetailPage';
-import ForIndividualsPage from './components/ForIndividualsPage';
+import ForStudentsPage from './components/ForStudentsPage';
+import ForSupervisorsPage from './components/ForSupervisorsPage';
 import ForUniversitiesPage from './components/ForUniversitiesPage';
 import ForCorporationsPage from './components/ForCorporationsPage';
 import { ModalProvider, useModal } from './contexts/ModalContext';
@@ -29,6 +31,9 @@ import ProductQuickViewModal from './components/ProductQuickViewModal';
 import AnalyticsPage from './components/dashboard/AnalyticsPage';
 import StrategyPage from './components/dashboard/StrategyPage';
 import MyTasksPage from './components/dashboard/MyTasksPage';
+import DocumentationPage from './components/DocumentationPage';
+import ResourcesPage from './components/ResourcesPage';
+import ComingSoonPage from './components/ComingSoonPage';
 
 
 const LandingPage = () => {
@@ -36,6 +41,7 @@ const LandingPage = () => {
     <>
       <main>
         <Hero />
+        <AudienceSection />
         <SocialProof />
         <ProductSuite />
         <Testimonials />
@@ -55,9 +61,21 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/products/:productId" element={<ProductDetailPage />} />
-        <Route path="/solutions/for-individuals" element={<ForIndividualsPage />} />
+        <Route path="/solutions/for-students" element={<ForStudentsPage />} />
+        <Route path="/solutions/for-supervisors" element={<ForSupervisorsPage />} />
         <Route path="/solutions/for-universities" element={<ForUniversitiesPage />} />
         <Route path="/solutions/for-corporations" element={<ForCorporationsPage />} />
+        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/resources/documentation" element={<DocumentationPage />} />
+        
+        {/* Footer Link Routes */}
+        <Route path="/integrations" element={<ComingSoonPage />} />
+        <Route path="/about" element={<ComingSoonPage />} />
+        <Route path="/careers" element={<ComingSoonPage />} />
+        <Route path="/press" element={<ComingSoonPage />} />
+        <Route path="/status" element={<ComingSoonPage />} />
+        <Route path="/legal" element={<ComingSoonPage />} />
+        
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />

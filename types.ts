@@ -1,9 +1,11 @@
 
+
 import type React from 'react';
 
 export interface NavLink {
   label: string;
   href: string;
+  description?: string;
   subMenu?: NavLink[];
 }
 
