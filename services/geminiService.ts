@@ -54,7 +54,7 @@ export async function generateIdeasWithLiterature(baseTopic: string, userContext
 
   const ai = new GoogleGenAI({ apiKey });
 
-  let prompt = `Based on the topic "${baseTopic}", generate 3 unique, novel research ideas with a high research gap.`;
+  let prompt = `Based on the topic "${baseTopic}", generate 3 unique, novel research ideas with a high research gap. Do not use markdown formatting.`;
 
   if (isIndustrial) {
     prompt += ` These ideas MUST be highly relevant to an industrial R&D context, focusing on practical applications, scalability, and commercial feasibility. The overview for each idea should touch upon potential industrial applications and challenges for pilot-scale implementation. The "research gap score" should also be evaluated from this industrial perspective.`;
@@ -215,7 +215,7 @@ export async function extractTextFromDocument(base64Data: string, mimeType: stri
       model: "gemini-2.5-flash",
       contents: { parts: [filePart, textPart] },
     });
-    return response.text;
+    return response.text || "";
   } catch (error) {
     console.error("Error extracting text from document:", error);
     throw new Error("Failed to extract text from the document. The file might be corrupted or in an unsupported format.");
@@ -685,5 +685,30 @@ export async function generateStrategicPriorities(statement: ProblemStatement): 
   } catch (error) {
     console.error("Error generating strategic priorities:", error);
     throw new Error("Failed to generate strategic priorities.");
+  }
+}
+
+export async function sendChatMessage(message: string, history: { role: string, parts: { text: string }[] }[] = []): Promise<string> {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("API key is not configured");
+
+  const ai = new GoogleGenAI({ apiKey });
+  
+  const chat = ai.chats.create({
+    model: 'gemini-3-pro-preview',
+    history: history,
+    config: {
+        systemInstruction: "You are Aveksana's AI assistant. You help researchers, students, and R&D professionals with their work. You are helpful, professional, and concise. Do not use markdown formatting like asterisks (**bold**) in your responses. Write in plain text.",
+    }
+  });
+
+  try {
+    const result = await chat.sendMessage({ message });
+    const text = result.text || "";
+    // Clean up any stray asterisks just in case
+    return text.replace(/\*/g, '');
+  } catch (error) {
+    console.error("Error in chat:", error);
+    throw new Error("Failed to get response from AI.");
   }
 }

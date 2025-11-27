@@ -4,57 +4,95 @@ import React from 'react';
 import type { NavLink, Product, Testimonial } from './types';
 import { ThesisIcon, ArthaIcon, RDPortalIcon } from './components/icons';
 
-export const NAV_LINKS: NavLink[] = [
+// --- Shared Submenus ---
+export const PRODUCTS_SUBMENU: NavLink[] = [
+  { 
+    label: 'Thesis Support System', 
+    href: '/#/products/thesis-support-system',
+    description: 'Improve research quality with AI-assisted supervision and academic integrity tools.'
+  },
+  { 
+    label: 'Artha — AI Grant Writer', 
+    href: '/#/products/artha-ai-grant-writer',
+    description: 'Boost grant success with optimized, data-driven proposal generation.'
+  },
+  { 
+    label: 'R&D Portal', 
+    href: '/#/products/rd-portal',
+    description: 'Centralize experiments, knowledge, and collaboration for research teams.'
+  },
+];
+
+export const SOLUTIONS_SUBMENU: NavLink[] = [
+  { 
+    label: 'For Students & Researchers', 
+    href: '/#/solutions/for-students',
+    description: 'Tools to plan, write, and complete theses with structured guidance.'
+  },
+  { 
+    label: 'For Supervisors & Faculty', 
+    href: '/#/solutions/for-supervisors',
+    description: 'Manage multiple students, streamline feedback, and ensure quality.'
+  },
+  { 
+    label: 'For Universities', 
+    href: '/#/solutions/for-universities',
+    description: 'Full research lifecycle oversight with security, compliance & reporting.'
+  },
+  { 
+    label: 'For Corporate R&D', 
+    href: '/#/solutions/for-corporations',
+    description: 'Modernize innovation workflows and accelerate R&D output.'
+  },
+];
+
+// --- Navigation Variants ---
+
+// Variant A: Persona-first (Fastest way for each persona to navigate)
+export const NAV_VARIANT_A: NavLink[] = [
+  { label: 'Products', href: '/#products', subMenu: PRODUCTS_SUBMENU },
+  { label: 'Students', href: '/#/solutions/for-students' },
+  { label: 'Supervisors', href: '/#/solutions/for-supervisors' },
+  { label: 'Universities', href: '/#/solutions/for-universities' },
+  { label: 'Corporates', href: '/#/solutions/for-corporations' },
+  { label: 'Resources', href: '/#/resources' },
+  { label: 'Pricing', href: '/#/solutions/for-students#plans' },
+];
+
+// Variant B: Hybrid Simplicity (Short, clean, standard)
+export const NAV_VARIANT_B: NavLink[] = [
   {
     label: 'Products',
     href: '/#products',
-    subMenu: [
-      { 
-        label: 'Thesis Support System', 
-        href: '/#/products/thesis-support-system',
-        description: 'Improve research quality with AI-assisted supervision and academic integrity tools.'
-      },
-      { 
-        label: 'Artha — AI Grant Writer', 
-        href: '/#/products/artha-ai-grant-writer',
-        description: 'Boost grant success with optimized, data-driven proposal generation.'
-      },
-      { 
-        label: 'R&D Portal', 
-        href: '/#/products/rd-portal',
-        description: 'Centralize experiments, knowledge, and collaboration for research teams.'
-      },
-    ],
+    subMenu: PRODUCTS_SUBMENU,
   },
   {
     label: 'Solutions',
     href: '/#demo',
-    subMenu: [
-      { 
-        label: 'For Students & Researchers', 
-        href: '/#/solutions/for-students',
-        description: 'Tools to plan, write, and complete theses with structured guidance.'
-      },
-      { 
-        label: 'For Supervisors & Faculty', 
-        href: '/#/solutions/for-supervisors',
-        description: 'Manage multiple students, streamline feedback, and ensure quality.'
-      },
-      { 
-        label: 'For Universities', 
-        href: '/#/solutions/for-universities',
-        description: 'Full research lifecycle oversight with security, compliance & reporting.'
-      },
-      { 
-        label: 'For Corporate R&D', 
-        href: '/#/solutions/for-corporations',
-        description: 'Modernize innovation workflows and accelerate R&D output.'
-      },
-    ],
+    subMenu: SOLUTIONS_SUBMENU,
   },
   { label: 'Resources', href: '/#/resources' },
   { label: 'Pricing', href: '/#/solutions/for-students#plans' },
 ];
+
+// Variant C: Value-first (Task-based navigation)
+export const NAV_VARIANT_C: NavLink[] = [
+  { label: 'Thesis', href: '/#/products/thesis-support-system' },
+  { label: 'Grants', href: '/#/products/artha-ai-grant-writer' },
+  { label: 'R&D', href: '/#/products/rd-portal' },
+  { label: 'Solutions', href: '/#demo', subMenu: SOLUTIONS_SUBMENU },
+  { label: 'Resources', href: '/#/resources' },
+  { label: 'Pricing', href: '/#/solutions/for-students#plans' },
+];
+
+export const NAV_VARIANTS = {
+  A: NAV_VARIANT_A,
+  B: NAV_VARIANT_B,
+  C: NAV_VARIANT_C,
+};
+
+// Default export for backward compatibility
+export const NAV_LINKS = NAV_VARIANT_B;
 
 export const PRODUCTS: Product[] = [
   {

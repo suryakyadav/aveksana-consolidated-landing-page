@@ -36,6 +36,7 @@ import MyTasksPage from './components/dashboard/MyTasksPage';
 import DocumentationPage from './components/DocumentationPage';
 import ResourcesPage from './components/ResourcesPage';
 import ComingSoonPage from './components/ComingSoonPage';
+import Chatbot from './components/Chatbot';
 
 const queryClient = new QueryClient();
 
@@ -59,7 +60,7 @@ const LandingPage = () => {
 const AppContent = () => {
   const { isDemoModalOpen, closeDemoModal, isQuickViewModalOpen, quickViewProduct, closeQuickViewModal } = useModal();
   return (
-    <div className="bg-brand-off-white font-sans text-brand-dark-grey">
+    <div className="bg-brand-off-white font-sans text-brand-dark-grey relative">
       <Header />
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -102,6 +103,7 @@ const AppContent = () => {
         onClose={closeQuickViewModal} 
         product={quickViewProduct} 
       />
+      <Chatbot />
     </div>
   )
 }

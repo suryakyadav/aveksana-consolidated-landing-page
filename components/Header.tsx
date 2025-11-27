@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { NavLink } from '../types';
-import { NAV_LINKS } from '../constants';
+import { NAV_VARIANTS, NAV_LINKS as DEFAULT_NAV_LINKS } from '../constants';
 import { ChevronDownIcon } from './icons';
 import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,6 +33,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [navLinks, setNavLinks] = useState<NavLink[]>(DEFAULT_NAV_LINKS);
   const navRef = useRef<HTMLElement>(null);
   const { openDemoModal } = useModal();
   const { isAuthenticated, logout, user, currentRole } = useAuth();
@@ -51,6 +52,22 @@ const Header = () => {
 
     window.addEventListener('scroll', handleScroll);
     document.addEventListener('mousedown', handleClickOutside);
+    
+    // A/B Testing Logic
+    const searchParams = new URLSearchParams(window.location.search);
+    const variantParam = searchParams.get('variant')?.toUpperCase();
+    const savedVariant = sessionStorage.getItem('nav_variant');
+
+    let variantToUse = 'B'; // Default to Hybrid Simplicity
+
+    if (variantParam && ['A', 'B', 'C'].includes(variantParam)) {
+        variantToUse = variantParam;
+        sessionStorage.setItem('nav_variant', variantToUse);
+    } else if (savedVariant && ['A', 'B', 'C'].includes(savedVariant)) {
+        variantToUse = savedVariant;
+    }
+
+    setNavLinks(NAV_VARIANTS[variantToUse as keyof typeof NAV_VARIANTS]);
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -74,7 +91,7 @@ const Header = () => {
         <Link to="/" className="text-2xl font-bold text-brand-dark-teal font-heading">Aveksana</Link>
         
         <nav ref={navRef} className="hidden lg:flex items-center space-x-8">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <div key={link.label} className="relative">
               {link.subMenu ? (
                 <button
@@ -134,7 +151,7 @@ const Header = () => {
                 <span className="font-bold text-xl text-brand-dark-teal">Menu</span>
                 <button onClick={() => setIsMobileMenuOpen(false)} className="text-brand-grey text-3xl">&times;</button>
             </div>
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <div key={link.label}>
                 {link.subMenu ? (
                     <>
