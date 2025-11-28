@@ -1,7 +1,8 @@
 
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import type { PipelineStatus, PipelineProject } from '../../types';
+import { type PipelineStatus, type PipelineProject, UserRole } from '../../types';
 import { Link } from 'react-router-dom';
 import { FlagIcon } from '../icons';
 
@@ -158,12 +159,12 @@ const PipelinePage = () => {
     }, [projects]);
 
     const getHeaderContent = () => {
-        if (user?.role === 'admin') {
+        if (user?.role === UserRole.ADMIN) {
             return {
                 title: "Global R&D Pipeline",
                 desc: "Overview of all innovation projects across the organization."
             };
-        } else if (user?.role === 'team_lead' || user?.role === 'supervisor') {
+        } else if (user?.role === UserRole.TEAM_LEAD || user?.role === UserRole.SUPERVISOR) {
              return {
                 title: "Team Innovation Pipeline",
                 desc: "Monitor and manage your team's project lifecycle."
@@ -185,7 +186,7 @@ const PipelinePage = () => {
                         <h1 className="text-4xl font-bold text-brand-dark-teal">{title}</h1>
                         <p className="mt-2 text-lg text-brand-dark-grey">{desc}</p>
                     </div>
-                     {(user?.role === 'admin' || user?.role === 'team_lead') && (
+                     {(user?.role === UserRole.ADMIN || user?.role === UserRole.TEAM_LEAD) && (
                         <div className="hidden md:flex items-center gap-2">
                             <span className="text-sm text-brand-dark-grey font-semibold">View:</span>
                             <select className="bg-white border border-brand-light-grey rounded-md px-3 py-1 text-sm text-brand-dark-grey focus:ring-2 focus:ring-brand-medium-teal outline-none">

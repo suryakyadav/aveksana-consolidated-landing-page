@@ -1,73 +1,36 @@
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { loginUser, registerUser, fetchUserProfile } from '../api/auth';
-import { useNavigate } from 'react-router-dom';
-import type { User } from '../types';
+// This file is largely deprecated by the move to Redux.
+// We keep it temporarily to prevent import errors in components that might still reference it directly,
+// mapping them to the new Redux-based useAuth hook where possible or providing stubs.
+
+import { useAuth } from '../contexts/AuthContext';
 
 export const useLogin = () => {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-
-  return useMutation({
-    mutationFn: loginUser,
-    onSuccess: (data) => {
-      // 1. Store token
-      localStorage.setItem('authToken', data.token);
-      
-      // 2. Update User Cache immediately
-      // Ensure the user object has empty arrays for the dashboard if undefined
-      const safeUser = {
-          ...data.user,
-          savedIdeas: data.user.savedIdeas || [],
-          pipelineProjects: data.user.pipelineProjects || [],
-          strategies: data.user.strategies || [],
-          recentActivity: data.user.recentActivity || [],
-          expertise: data.user.expertise || []
-      };
-      
-      queryClient.setQueryData(['user'], safeUser);
-      
-      // 3. Redirect
-      navigate('/dashboard');
-    },
-    onError: (error: any) => {
-      console.error("Login failed:", error.response?.data?.message || error.message);
-    },
-  });
+  const { login, isLoading, isError } = useAuth();
+  // Adapter to match React Query mutation signature roughly
+  return {
+    mutate: login,
+    isPending: isLoading,
+    isError: isError,
+    error: null
+  };
 };
 
 export const useRegister = () => {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-
-  return useMutation({
-    mutationFn: registerUser,
-    onSuccess: (data) => {
-      localStorage.setItem('authToken', data.token);
-      queryClient.setQueryData(['user'], data.user);
-      navigate('/dashboard');
-    },
-  });
+  const { register, isLoading, isError } = useAuth();
+  return {
+    mutate: register,
+    isPending: isLoading,
+    isError: isError,
+    error: null
+  };
 };
 
-// Hook to check if user is logged in (runs on app load)
 export const useUser = () => {
-  return useQuery({
-    queryKey: ['user'],
-    queryFn: fetchUserProfile,
-    retry: false, // Don't retry if 401
-    enabled: !!localStorage.getItem('authToken'), // Only run if token exists
-    // Ensure we return a structure compatible with the dashboard even if some fields are missing
-    select: (data: User) => {
-        if (!data) return undefined;
-        return {
-            ...data,
-            savedIdeas: data.savedIdeas || [],
-            pipelineProjects: data.pipelineProjects || [],
-            strategies: data.strategies || [],
-            recentActivity: data.recentActivity || [],
-            expertise: data.expertise || []
-        };
-    }
-  });
+  const { user, isLoading, isError } = useAuth();
+  return {
+    data: user,
+    isLoading,
+    isError
+  };
 };

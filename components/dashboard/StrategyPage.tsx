@@ -1,8 +1,9 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { generateProblemStatement, generateTeamCritique, generateImplementationPlan, generateStrategicPriorities } from '../../services/geminiService';
 import { Link, useNavigate } from 'react-router-dom';
-import type { ProblemStatement, StrategicPlan, ChatMessage, ImplementationItem, PriorityItem } from '../../types';
+import { type ProblemStatement, type StrategicPlan, type ChatMessage, type ImplementationItem, type PriorityItem, UserRole } from '../../types';
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon, UsersIcon, PlusIcon, TrashIcon, LockClosedIcon, DocumentIcon, TargetIcon, UserGroupIcon, ClockIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon, UserPlusIcon, FlagIcon, PresentationChartLineIcon, MegaphoneIcon, AdjustmentsIcon, CalendarIcon, RDPortalIcon } from '../icons';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -720,7 +721,7 @@ const StrategyPage = () => {
                         <LockClosedIcon /> Private
                     </span>
                 )}
-                 {(user?.role === 'admin' || user?.role === 'team_lead') && status !== 'published' && (
+                 {(user?.role === UserRole.ADMIN || user?.role === UserRole.TEAM_LEAD) && status !== 'published' && (
                     <button
                         onClick={handlePublish}
                         className="px-4 py-2 rounded-lg font-semibold shadow-sm transition-all bg-brand-seafoam text-brand-dark-teal hover:opacity-90 flex items-center gap-2"
@@ -860,7 +861,7 @@ const StrategyPage = () => {
                                 >
                                     <PlusIcon /> Add Priority
                                 </button>
-                                {(user?.role === 'admin' || user?.role === 'team_lead') && isDefinitionComplete() && (
+                                {(user?.role === UserRole.ADMIN || user?.role === UserRole.TEAM_LEAD) && isDefinitionComplete() && (
                                     <button
                                         onClick={handleGeneratePriorities}
                                         disabled={isPrioritiesLoading}
@@ -949,7 +950,7 @@ const StrategyPage = () => {
                                 <ClipboardDocumentCheckIcon />
                                 <h2 className="text-xl font-bold text-brand-dark-teal">Implementation Plan</h2>
                             </div>
-                            {(user?.role === 'admin' || user?.role === 'team_lead') && isDefinitionComplete() && (
+                            {(user?.role === UserRole.ADMIN || user?.role === UserRole.TEAM_LEAD) && isDefinitionComplete() && (
                                 <button
                                     onClick={handleGeneratePlan}
                                     disabled={isPlanLoading}
@@ -1012,7 +1013,7 @@ const StrategyPage = () => {
                                                             <div className="text-xs text-brand-grey flex items-center gap-2">
                                                                 <span className="font-semibold text-brand-dark-teal">Suggested Role:</span> {item.suggestedRole}
                                                             </div>
-                                                            {(user?.role === 'admin' || user?.role === 'team_lead') ? (
+                                                            {(user?.role === UserRole.ADMIN || user?.role === UserRole.TEAM_LEAD) ? (
                                                                 <div className="relative group">
                                                                     {item.assignee ? (
                                                                         <div className="flex items-center gap-2 bg-white border border-brand-light-grey rounded-full pl-1 pr-3 py-1 shadow-sm">
@@ -1060,7 +1061,7 @@ const StrategyPage = () => {
                                                                 <CalendarIcon />
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] font-bold text-brand-grey uppercase">Due Date</span>
-                                                                    {(user?.role === 'admin' || user?.role === 'team_lead') ? (
+                                                                    {(user?.role === UserRole.ADMIN || user?.role === UserRole.TEAM_LEAD) ? (
                                                                         <input 
                                                                             type="date" 
                                                                             value={item.dueDate || ''}
@@ -1073,7 +1074,7 @@ const StrategyPage = () => {
                                                                 </div>
                                                             </div>
                                                             
-                                                            {(user?.role === 'admin' || user?.role === 'team_lead') && (
+                                                            {(user?.role === UserRole.ADMIN || user?.role === UserRole.TEAM_LEAD) && (
                                                                 item.relatedProjectId ? (
                                                                     <button
                                                                         onClick={() => handlePromoteToPipeline(item)}

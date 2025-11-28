@@ -99,8 +99,9 @@ export const PRODUCTS: Product[] = [
     id: 'thesis-support-system',
     icon: <ThesisIcon />,
     title: 'Thesis Support System',
-    description: 'Support students with guided writing, real-time feedback, supervision dashboards, and academic integrity automation.',
-    keyFeatures: ['AI-Powered Feedback & Review', 'Advanced Plagiarism Detection', 'Real-time Progress Tracking Dashboards', 'Secure Document Management'],
+    description: 'An intelligent workspace that guides students from topic selection to submission with AI-assisted writing and automated supervision tools.',
+    fullDescription: 'Writing a thesis is often a lonely and overwhelming process. The Thesis Support System acts as your intelligent academic co-pilot, designed to bring structure, clarity, and confidence to your research journey. Beyond standard spell-checking, our engine understands academic rigor. It helps you break down complex chapters into manageable milestones, provides instant feedback on argumentation logic, and ensures your citations meet institutional standards. For supervisors, it transforms scattered email threads into a centralized dashboard of student progress, enabling timely, high-impact mentorship.',
+    keyFeatures: ['Smart Chapter Structuring & Templates', 'Real-time Academic Integrity & AI Checks', 'Centralized Supervisor Feedback Loops', 'Automated Milestone & Progress Tracking'],
   },
   {
     id: 'artha-ai-grant-writer',

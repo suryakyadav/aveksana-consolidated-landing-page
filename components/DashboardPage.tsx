@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { ThesisIcon, ArthaIcon, RDPortalIcon, UsersIcon, ChartBarIcon, ClipboardListIcon, ShieldCheckIcon, AdjustmentsIcon, TargetIcon, CheckBadgeIcon } from './icons';
 import { useAuth } from '../contexts/AuthContext';
 import type { Activity } from '../types';
+import { UserRole } from '../types';
 
 const DashboardCard: React.FC<{icon: React.ReactNode, title: string, description: string, cta: string, to: string, badge?: string}> = ({ icon, title, description, cta, to, badge }) => (
     <Link to={to} className="group relative block p-8 bg-brand-off-white rounded-xl shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-brand-light-grey h-full">
@@ -93,8 +94,8 @@ const DashboardPage = () => {
 
         const pipelineFeature = {
             icon: <RDPortalIcon />,
-            title: currentRole === 'researcher' ? 'My R&D Pipeline' : 'Team Innovation Pipeline',
-            description: currentRole === 'researcher' 
+            title: currentRole === UserRole.RESEARCHER ? 'My R&D Pipeline' : 'Team Innovation Pipeline',
+            description: currentRole === UserRole.RESEARCHER 
                 ? 'Visualize your personal innovation pipeline.' 
                 : 'Monitor project status across your team.',
             cta: 'Go to Pipeline',
@@ -118,7 +119,7 @@ const DashboardPage = () => {
         };
 
         // Student View (or Personal Workspace)
-        if (currentRole === 'student' || !activeWorkspace || activeWorkspace.type === 'Personal') {
+        if (currentRole === UserRole.STUDENT || !activeWorkspace || activeWorkspace.type === 'Personal') {
             return [
                 {
                     icon: <ThesisIcon />,
@@ -148,7 +149,7 @@ const DashboardPage = () => {
 
         const baseFeatures = [commonFeatures[0], commonFeatures[1], pipelineFeature, profileFeature];
 
-        if (currentRole === 'admin') {
+        if (currentRole === UserRole.ADMIN) {
             return [
                 ...baseFeatures,
                 {
@@ -178,7 +179,7 @@ const DashboardPage = () => {
             ];
         }
 
-        if (currentRole === 'team_lead') {
+        if (currentRole === UserRole.TEAM_LEAD) {
              return [
                 ...baseFeatures,
                 {
@@ -200,7 +201,7 @@ const DashboardPage = () => {
             ];
         }
         
-        if (currentRole === 'supervisor') {
+        if (currentRole === UserRole.SUPERVISOR) {
              return [
                 ...baseFeatures,
                 {
@@ -215,7 +216,7 @@ const DashboardPage = () => {
         }
 
         // Researcher Role
-        if (currentRole === 'researcher') {
+        if (currentRole === UserRole.RESEARCHER) {
             const features = [...baseFeatures];
             features.splice(2, 0, tasksFeature);
             return features;
@@ -241,7 +242,7 @@ const DashboardPage = () => {
                     </span>
                 </p>
             </div>
-            {currentRole === 'admin' && (
+            {currentRole === UserRole.ADMIN && (
                  <span className="hidden md:inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold">System Administrator</span>
             )}
         </header>

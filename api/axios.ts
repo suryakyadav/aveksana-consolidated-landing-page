@@ -4,9 +4,7 @@ import axios from 'axios';
 // NOTE: This file defines the Axios configuration for a REAL backend integration.
 // Currently, the application is using the mock implementation in `api/auth.ts` to simulate 
 // the backend experience without a running server. 
-// To switch to real API calls, you would import `apiClient` in `api/auth.ts` and use it instead of the mock functions.
 
-// In a real environment, this would come from import.meta.env.VITE_API_URL or process.env
 const API_URL = 'https://api.aveksana.com/v1'; 
 
 const apiClient = axios.create({
@@ -14,11 +12,24 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // SECURITY UPGRADE: 
   // 'withCredentials: true' allows the browser to send cookies (HttpOnly) with requests.
-  // This is required if you move from localStorage to Cookie-based auth in the future.
   withCredentials: true, 
 });
+
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
 
 // 1. Request Interceptor: Attaches token to every request
 apiClient.interceptors.request.use(
@@ -38,22 +49,49 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If 401 Unauthorized and we haven't retried yet
+    // Handle 401 Unauthorized (Token Expired)
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      // TODO: IMPLEMENT REFRESH TOKEN LOGIC HERE
-      // 1. Call backend endpoint '/auth/refresh-token' (sending refresh token cookie)
-      // 2. Get new Access Token
-      // 3. Update localStorage (or memory)
-      // 4. Update originalRequest.headers['Authorization']
-      // 5. Return apiClient(originalRequest)
       
-      // For now, fallback to logout
-      localStorage.removeItem('authToken');
-      // Optionally redirect to login here if not handled by ProtectedRoute
-      // window.location.href = '/login'; 
+      if (isRefreshing) {
+        return new Promise(function(resolve, reject) {
+          failedQueue.push({resolve, reject});
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return apiClient(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Attempt to refresh the token
+        // In a real app, you would call your backend endpoint
+        // const { data } = await axios.post(`${API_URL}/auth/refresh-token`, {}, { withCredentials: true });
+        
+        // Mocking refresh success for demonstration
+        const mockNewToken = 'mock-refreshed-token-' + Date.now();
+        localStorage.setItem('authToken', mockNewToken);
+        
+        apiClient.defaults.headers.common['Authorization'] = 'Bearer ' + mockNewToken;
+        originalRequest.headers['Authorization'] = 'Bearer ' + mockNewToken;
+        
+        processQueue(null, mockNewToken);
+        isRefreshing = false;
+        
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        // Logout user on failure
+        localStorage.removeItem('authToken');
+        window.location.href = '/login'; 
+        return Promise.reject(refreshError);
+      }
     }
+
     return Promise.reject(error);
   }
 );

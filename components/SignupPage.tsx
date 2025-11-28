@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useRegister } from '../hooks/useAuthQuery';
 import { useModal } from '../contexts/ModalContext';
 import { UsersIcon, RDPortalIcon, TargetIcon } from './icons';
+import { UserRole } from '../types';
 
 const SignupPage = () => {
   const [activeTab, setActiveTab] = useState<'individual' | 'institution'>('individual');
@@ -25,7 +26,7 @@ const SignupPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // For individuals, we default to 'student' role
-    register({ ...formData, role: 'student', organization: 'Independent' });
+    register({ ...formData, role: UserRole.STUDENT, organization: 'Independent' });
   };
 
   const inputClasses = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-medium-teal focus:border-transparent outline-none transition bg-white";

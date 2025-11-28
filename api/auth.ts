@@ -1,6 +1,6 @@
 
 
-import type { User, UserRole, PipelineProject, GeneratedIdea, StrategicPlan, Organization } from '../types';
+import { UserRole, type User, type PipelineProject, type GeneratedIdea, type StrategicPlan, type Organization } from '../types';
 
 // --- MOCK DATA GENERATORS ---
 
@@ -91,12 +91,12 @@ const generateMockUser = (email: string, roleOverride?: UserRole): User => {
     const org = ORGS[domain];
     
     // Determine primary role based on domain or override
-    let primaryRole: UserRole = roleOverride || 'student';
+    let primaryRole: UserRole = roleOverride || UserRole.STUDENT;
     if (!roleOverride) {
-        if (domain === 'mit.edu') primaryRole = 'supervisor';
-        else if (domain === 'techcorp.com') primaryRole = 'researcher';
-        else if (domain === 'university.edu') primaryRole = 'admin';
-        else primaryRole = 'student';
+        if (domain === 'mit.edu') primaryRole = UserRole.SUPERVISOR;
+        else if (domain === 'techcorp.com') primaryRole = UserRole.RESEARCHER;
+        else if (domain === 'university.edu') primaryRole = UserRole.ADMIN;
+        else primaryRole = UserRole.STUDENT;
     }
 
     const baseUser: User = {
@@ -124,16 +124,16 @@ const generateMockUser = (email: string, roleOverride?: UserRole): User => {
         });
         
         // Add multi-role scenario for testing
-        if (primaryRole === 'admin') {
-             baseUser.memberships[0].roles.push('supervisor');
+        if (primaryRole === UserRole.ADMIN) {
+             baseUser.memberships[0].roles.push(UserRole.SUPERVISOR);
         }
     }
 
     // Customize data based on role
-    if (primaryRole === 'student') {
+    if (primaryRole === UserRole.STUDENT) {
         baseUser.pipelineProjects = [MOCK_PROJECTS[1]];
         baseUser.strategies = [];
-    } else if (primaryRole === 'researcher') {
+    } else if (primaryRole === UserRole.RESEARCHER) {
         baseUser.strategies = []; // Researchers might not see strategies by default unless invited
     }
 
@@ -170,7 +170,7 @@ export const loginUser = async (credentials: { email: string; password?: string;
 export const registerUser = async (userData: any): Promise<AuthResponse> => {
   await delay(1000);
   
-  const role = userData.role || 'student';
+  const role = userData.role || UserRole.STUDENT;
   const mockUser = generateMockUser(userData.email, role);
   mockUser.name = userData.name;
 
@@ -186,7 +186,7 @@ export const registerUser = async (userData: any): Promise<AuthResponse> => {
 export const fetchUserProfile = async (): Promise<User> => {
   await delay(500);
   
-  const role = (localStorage.getItem('mock_user_role') as UserRole) || 'student';
+  const role = (localStorage.getItem('mock_user_role') as UserRole) || UserRole.STUDENT;
   const email = localStorage.getItem('mock_user_email');
   
   if (!email) throw new Error("No session");

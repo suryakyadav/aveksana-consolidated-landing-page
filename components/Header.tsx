@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { NavLink } from '../types';
+import { type NavLink, UserRole } from '../types';
 import { NAV_VARIANTS, NAV_LINKS as DEFAULT_NAV_LINKS } from '../constants';
 import { ChevronDownIcon } from './icons';
 import { useModal } from '../contexts/ModalContext';
@@ -16,12 +16,12 @@ const DropdownMenu: React.FC<{ items: NavLink[]; closeDropdown: () => void }> = 
         <Link
           key={item.label}
           to={item.href.startsWith('/#/') ? item.href.substring(2) : item.href}
-          className="block px-4 py-3 text-sm text-brand-dark-grey hover:bg-brand-light-grey group"
+          className="block px-4 py-3 text-sm text-gray-600 hover:bg-brand-light-grey group"
           onClick={closeDropdown}
         >
-          <span className="block font-semibold group-hover:text-brand-medium-teal">{item.label}</span>
+          <span className="block font-semibold text-brand-dark-grey group-hover:text-brand-medium-teal">{item.label}</span>
           {item.description && (
-             <span className="block text-xs text-brand-grey mt-0.5">{item.description}</span>
+             <span className="block text-xs text-gray-600 mt-0.5">{item.description}</span>
           )}
         </Link>
       ))}
@@ -118,7 +118,7 @@ const Header = () => {
         <div className="hidden lg:flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              {currentRole === 'admin' && (
+              {currentRole === UserRole.ADMIN && (
                  <span className="text-xs font-bold bg-red-100 text-red-800 px-2 py-1 rounded-md">ADMIN</span>
               )}
               <WorkspaceSelector />
@@ -160,7 +160,7 @@ const Header = () => {
                             {link.subMenu.map(subLink => (
                             <Link key={subLink.label} to={subLink.href.startsWith('/#/') ? subLink.href.substring(2) : subLink.href} onClick={() => setIsMobileMenuOpen(false)} className="block group">
                                 <span className="block text-brand-dark-grey font-medium group-hover:text-brand-medium-teal">{subLink.label}</span>
-                                <span className="block text-xs text-brand-grey mt-0.5">{subLink.description}</span>
+                                <span className="block text-xs text-gray-600 mt-0.5">{subLink.description}</span>
                             </Link>
                             ))}
                         </div>

@@ -13,7 +13,8 @@ export interface Product {
   id: string;
   icon: React.ReactNode;
   title: string;
-  description: string;
+  description: string; // Short description for cards
+  fullDescription?: string; // Long description for detail page
   keyFeatures: string[];
 }
 
@@ -50,7 +51,13 @@ export interface Activity {
   link: string;
 }
 
-export type UserRole = 'admin' | 'team_lead' | 'researcher' | 'supervisor' | 'student';
+export enum UserRole {
+  ADMIN = 'admin',
+  TEAM_LEAD = 'team_lead',
+  RESEARCHER = 'researcher',
+  SUPERVISOR = 'supervisor',
+  STUDENT = 'student'
+}
 
 export type OrganizationType = 'University' | 'Corporate';
 

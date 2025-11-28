@@ -2,6 +2,10 @@
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import ErrorBoundary from './components/ErrorBoundary';
+
 import Header from './components/Header';
 import Hero from './components/Hero';
 import AudienceSection from './components/AudienceSection';
@@ -12,12 +16,13 @@ import TopicGenerator from './components/TopicGenerator';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
 import ProductDetailPage from './components/ProductDetailPage';
+import ThesisProductPage from './components/ThesisProductPage';
 import ForStudentsPage from './components/ForStudentsPage';
 import ForSupervisorsPage from './components/ForSupervisorsPage';
 import ForUniversitiesPage from './components/ForUniversitiesPage';
 import ForCorporationsPage from './components/ForCorporationsPage';
 import { ModalProvider, useModal } from './contexts/ModalContext';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext'; // Kept as fragment wrapper or we can remove
 import RequestDemoModal from './components/RequestDemoModal';
 import Resources from './components/Resources';
 import LoginPage from './components/LoginPage';
@@ -64,7 +69,11 @@ const AppContent = () => {
       <Header />
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        
+        {/* Specific Product Routes MUST come before generic :productId */}
+        <Route path="/products/thesis-support-system" element={<ThesisProductPage />} />
         <Route path="/products/:productId" element={<ProductDetailPage />} />
+        
         <Route path="/solutions/for-students" element={<ForStudentsPage />} />
         <Route path="/solutions/for-supervisors" element={<ForSupervisorsPage />} />
         <Route path="/solutions/for-universities" element={<ForUniversitiesPage />} />
@@ -111,15 +120,19 @@ const AppContent = () => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <HashRouter>
-        <ModalProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </ModalProvider>
-      </HashRouter>
-    </QueryClientProvider>
+    <Provider store={store}>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <HashRouter>
+            <ModalProvider>
+              <AuthProvider>
+                <AppContent />
+              </AuthProvider>
+            </ModalProvider>
+          </HashRouter>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </Provider>
   );
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { PRODUCTS } from '../constants';
@@ -38,7 +39,9 @@ const ProductDetailPage = () => {
               </div>
             </div>
             <h1 className="mt-6 text-4xl md:text-5xl font-bold text-brand-dark-teal">{product.title}</h1>
-            <p className="mt-4 text-lg text-brand-dark-grey max-w-2xl mx-auto">{product.description}</p>
+            <p className="mt-4 text-lg text-brand-dark-grey max-w-2xl mx-auto leading-relaxed">
+              {product.fullDescription || product.description}
+            </p>
           </div>
 
           <div className="mt-16 bg-brand-off-white p-8 rounded-lg">
